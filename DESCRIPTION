@@ -1,0 +1,15 @@
+Package: bio.template
+Title: Package that interacts with bio and associated projects to ... 
+Version: 0.1
+Authors@R: c( person("Firstname", "Lastname", email="xxx@xxx.xxx", role=c("aut", "cre")) ) 
+Description: This project interacts with the functionality of bio 
+    to do something very special ...
+Depends: R (>= 3.0.0)
+Imports: devtools, bio.base
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+License: MIT
+LazyData: true
+URL: https://github.com/XXX/bio.template/
+
+
