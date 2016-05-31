@@ -1,15 +1,29 @@
-Package: bio.template
-Title: Package that interacts with bio and associated projects to ... 
+Package: bio.temperature
+Title: Package that interacts with bio and associated projects to operate upon temperature fields.
 Version: 0.1
-Authors@R: c( person("Firstname", "Lastname", email="xxx@xxx.xxx", role=c("aut", "cre")) ) 
-Description: This project interacts with the functionality of bio 
-    to do something very special ...
+Authors@R: c( person("Jae", "Choi", email="choijaeseok@gmail.com", role=c("aut", "cre")) ) 
+Description: This project interacts with the functionality of bio to operature upon temperature fields.
 Depends: R (>= 3.0.0)
-Imports: devtools, bio.base
+Imports: 
+  devtools, 
+  gstat,
+  mgcv,
+  sp,
+  parallel,
+  rgdal,
+  bigmemory,
+  lubridate,
+  fields,
+  bio.base, 
+  bio.spacetime,
+  bio.utilities,
+  bio.bathymetry, 
+  bio.polygons,
+  bio.temperature
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 License: MIT
 LazyData: true
-URL: https://github.com/XXX/bio.template/
+URL: https://github.com/beothuk/bio.temperature/
 
 
