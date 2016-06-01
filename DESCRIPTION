@@ -15,11 +15,10 @@ Imports:
   lubridate,
   fields,
   bio.base, 
-  bio.spacetime,
-  bio.utilities,
   bio.bathymetry, 
   bio.polygons,
-  bio.temperature
+  bio.spacetime,
+  bio.utilities
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 License: MIT
