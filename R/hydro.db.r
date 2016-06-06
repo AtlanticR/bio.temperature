@@ -158,7 +158,7 @@
 
       # bring in snow crab, groundfish and OSD data ...
 
-      bioLibrary( "snowcrab")  # only need the functions not the whole environment
+      bioLibrary( "bio.snowcrab")  # only need the functions not the whole environment
 
       set = snowcrab.db( DS="setInitial" )
       mlu = minilog.db( DS="set.minilog.lookuptable" )
@@ -173,7 +173,7 @@
 
       set = set[ ,c("minilog_uid", "seabird_uid", "longitude", "latitude", "oxyml", "salinity", "sigmat" ) ]
 
-      bioLibrary( "groundfish")
+      bioLibrary( "bio.groundfish")
       grdfish = groundfish.db( "gshyd.georef" )
 
       Ydummy = hydro.db( DS="osd.rawdata", yr=2000, p=p ) [1,]  # dummy entry using year=2000
