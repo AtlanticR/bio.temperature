@@ -1,5 +1,5 @@
 
-  p = list( project.name = "temperature" )
+  p = list( project.name = "bio.temperature" )
   p$project.root = project.datadirectory( p$project.name )
 
   p$libs = RLibrary( "gstat", "sp", "rgdal", "parallel", "mgcv", "bigmemory", "INLA", "lattice" )

@@ -3,7 +3,7 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  p = list( project.name = "temperature" )
+  p = list( project.name = "bio.temperature" )
   p$project.root = project.datadirectory( p$project.name )
 
   p$libs = RLibrary( c( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "bigmemory", "fields" ) )
