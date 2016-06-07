@@ -289,7 +289,7 @@ Posterior marginals for linear predictor and fitted values computed
   # 3. spatial model only on temperature
 
     p = list()
-    p$libs = RLibrary( c( "chron", "gstat", "sp", "parallel", "mgcv", "bigmemory", "INLA", "lattice" ) )
+    p$libs = RLibrary( "lubridate", "gstat", "sp", "parallel", "mgcv", "bigmemory", "INLA", "lattice" )
     p$libs = c( p$libs, bioLibrary( "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.temperature", "bio.polygons" ) )
 
     p$tyears = c(2012)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.

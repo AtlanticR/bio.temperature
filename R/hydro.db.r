@@ -214,7 +214,8 @@
           gf = grdfish[ which( grdfish$yr == yt ) , gfkeep ]
 					if (nrow(gf) > 0) {
 						gf$sigmat = NA
-						gf$date = as.POSIXct(gf$date, origin=lubridate::origin)
+						gf$date = gf$timestamp
+            # gf$date = as.POSIXct(gf$date, origin=lubridate::origin)
             gf$dyear = lubridate::decimal_date( gf$date ) - gf$yr
             names(gf) = c( "id", "depth", "temperature", "salinity", "oxyml", "longitude", "latitude", "yr", "date", "dyear", "sigmat"  )
             Y = rbind( Y, gf[, names(Y)] )
@@ -228,7 +229,8 @@
           if (! is.null( nrow( minilog ) ) ) {
             minilog = merge( minilog, set, by="minilog_uid", all.x=TRUE, all.y=FALSE )
             minilog$id = minilog$minilog_uid
-            minilog$date = as.POSIXct(minilog$chron, origin=lubridate::origin)
+            minilog$date = minilog$timestamp
+            # minilog$date = as.POSIXct(minilog$chron, origin=lubridate::origin)
             minilog$yr = yt
             minilog$dyear = lubridate::decimal_date( minilog$date ) - minilog$yr
             Y = rbind( Y, minilog[, names(Y) ] )
@@ -239,7 +241,8 @@
             seabird = merge( seabird, set, by="seabird_uid", all.x=TRUE, all.y=FALSE )
             seabird$id = seabird$seabird_uid
             seabird$yr = yt
-            seabird$date = as.POSIXct(seabird$chron, origin=lubridate::origin)
+            seabird$date = seabird$timestamp
+            # seabird$date = as.POSIXct(seabird$chron, origin=lubridate::origin)
             seabird$dyear = lubridate::decimal_date( seabird$date ) - seabird$yr
             seabird$oxyml = NA
             Y = rbind( Y, seabird[, names(Y) ] )
