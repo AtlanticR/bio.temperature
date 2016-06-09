@@ -10,6 +10,9 @@
     ## use choijae/Jc#00390
     ## depths: 500,500, "complete profile"   .. raw data  for the SS
     # (USER Defined -- region: jc.ss")
+
+    # no time records, just day/mon/year .. assume utc
+
     basedir = project.datadirectory("bio.temperature", "data" )
     loc.archive = file.path( basedir, "archive", "profiles", p$spatial.domain )
     loc.basedata = file.path( basedir, "basedata", "rawdata", p$spatial.domain )
@@ -49,7 +52,8 @@
           print( paste(yrs, ":", fn.out) )
           X = f[ which( fyears == yrs) ,]
           names(X) = tolower( names(X) )
-          X$date = lubridate::dmy( X$cruise_date )
+          X$date = lubridate::dmy( X$cruise_date )   # default is UTC ... need to confirm-- no time records .. assume utc
+
           X = X[ , varstosave ]
           save( X, file=fn.out, compress=T)
         }
@@ -68,7 +72,7 @@
         X = f[,varlist]
         fn.out = file.path( loc.basedata, paste( "osd.rawdata", y, "rdata", sep=".") )
         names(X) = tolower( names(X) )
-        X$date = lubridate::ymd( X$cruise_date )
+        X$date = lubridate::ymd( X$cruise_date, tz= )  # default is UTC ... need to confirm
         X= X[, varstosave ]
         save( X, file=fn.out, compress=T)
       }
@@ -85,7 +89,8 @@
       XX$depth = decibar2depth ( P=XX$pressure, lat=XX$latitude )
       if (!exists( "sigmat", XX))  XX$sigmat = XX$sigma.t  # naming is variable
       XX$date_string = paste( XX$year, XX$month, XX$day, sep="-" )
-      XX$date = lubridate::ymd( XX$date_string )
+      XX$date = lubridate::ymd( XX$date_string )   # default is UTC ... need to confirm
+
       yrs = sort( unique( XX$year) )
       for ( y in yrs ) {
         print (y)
@@ -114,7 +119,8 @@
         X$depth = decibar2depth ( P=X$pressure, lat=X$latitude )
         if (!exists( "sigmat", X))  X$sigmat = X$sigma.t  # naming is variable
         X$date_string = paste( X$year, X$month, X$day, sep="-" )
-        X$date = lubridate::ymd( X$date_string )
+        X$date = lubridate::ymd( X$date_string )   # default is UTC ... need to confirm
+
         X= X[, varstosave ]
         save( X, file=fn.out, compress=T)
       }
