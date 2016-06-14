@@ -362,7 +362,7 @@
     if (DS %in% c("complete", "complete.redo" )) {
       ### a conveniance data table to reduce number of merges occuring during modelling steps
       ### annual stats and climatology are merged together
-      ### essentially the base level data set for habitat db but needed at a lower level as it is used for the other indicators
+      ### essentially the base level data set for indicators.db but needed at a lower level as it is used for the other indicators
 
       if (DS=="complete") {
         PS = NULL
