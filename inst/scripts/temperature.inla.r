@@ -1,19 +1,17 @@
 
-  p = list( project.name = "bio.temperature" )
-  p$project.root = project.datadirectory( p$project.name )
+  -- incomplete ..
 
-  p$libs = RLibrary( "gstat", "sp", "rgdal", "parallel", "mgcv", "bigmemory", "INLA", "lattice" )
-  p$libs = c( p$libs, bioLibrary( "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons" , "bio.temperature" ) )
-
-
-  p$tyears = c(1990:1995)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
-  p$nw = 10  # numbe rof intervals within a year
-  p = spatial.parameters( p=p, type="SSE" ) #  type="canada.east"  can be completed later (after assessment) when time permits if required
+  p = bio.temperature::temperature.parameters( project.name="bio.temperature", sp="inla", current.year=2016 )
 
   # p = temperature.db( p=p, DS="bigmemory.filenames" )
 
 
+
+
+
   # wrap up
+
+
   p = temperature.db( p=p, DS="bigmemory.cleanup" )
 
 
