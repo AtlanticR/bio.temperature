@@ -3,7 +3,7 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  p = bio.temperature::temperature.parameters( project.name="bio.temperature", sp="gam", current.year=2016 )
+  p = bio.temperature::temperature.parameters( DS="bio.temperature", sp="gam", current.year=2016 )
 
   # ------------------------------
 
