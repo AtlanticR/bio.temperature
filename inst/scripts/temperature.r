@@ -20,13 +20,13 @@
     p = make.list( list( yrs=c(2008:p$newyear)), Y=p )   # specify range or specific year
     p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce ep = make.list( list( yrs=c(2008:p$newyear), Y=p ))   # specify range or specific year
     hydro.db( DS="profiles.annual.redo", p=p  )  # specify range or specific year
-    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="profiles.annual.redo", init.files=p$init.files )
+    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="profiles.annual.redo" )
 
     # Extract bottom data from each profile
     p = make.list( list( yrs=2008:p$newyear), Y=p )  # specify range or specific year
     hydro.db( DS="bottom.annual.redo", yr=2008:p$newyear, p=p ) # yr argument overrides p$tyears .. e.g. for a new year of data
     # hydro.db( DS="bottom.annual.redo", p=p )
-    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="bottom.annual.redo", init.files=p$init.files )
+    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="bottom.annual.redo" )
   }
 
   # ------------------------------

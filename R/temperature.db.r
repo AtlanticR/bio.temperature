@@ -1,3 +1,4 @@
+
 temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 
   if (DS %in% "bigmemory.filenames" ) {
@@ -118,7 +119,6 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
   if (DS %in% c(  "spatial.interpolation", "spatial.interpolation.se", "spatial.interpolation.redo" )){
 
     starttime = Sys.time()
-    if ( exists("libs", p) ) RLibrary( p$libs )
 
 		# interpolated predictions over only missing data
 		spinterpdir =  file.path( project.datadirectory("bio.temperature"), "data", "interpolated", "spatial", p$spatial.domain )

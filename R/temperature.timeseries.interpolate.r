@@ -1,8 +1,7 @@
 
   temperature.timeseries.interpolate = function( ip=NULL, p ) {
 
-    if (exists( "init.files", p)) LoadFiles( p$init.files ) 
-    if (exists( "libs", p)) RLibrary( p$libs ) 
+    if (exists( "libs", p)) RLibrary( p$libs )
     if (is.null(ip)) ip = 1:p$nruns
 
     # default output grid
@@ -19,16 +18,16 @@
     if (p$tsmethod %in% c("inla.ts.simple" ) ) {
         interpolate.ts = temperature.timeseries.interpolate.inla
     }
-    
+
     if ( p$tsmethod %in% c("ar" ) ) {
         interpolate.ts = temperature.timeseries.interpolate.spectral  ## to do..
     }
-    
+
 
     B = hydro.db( p=p, DS="bottom.gridded.all"  )
     B$tiyr = lubridate::decimal_date ( B$date )
- 
-    # globally remove all unrealistic data  
+
+    # globally remove all unrealistic data
     keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
     if (length(keep) > 0 ) B = B[ keep, ]
     TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
@@ -48,12 +47,12 @@
       res = try( interpolate.ts ( p=p, bb=B, pp=P[mm,], zz=z0 ), silent=TRUE )
       if ( class(res) %in% "try-error" ) next()
       if ( any(is.finite(res$fit)) ) {
-        print (mm)			
+        print (mm)
         tbot[ mm,] = res$fit
         tbot.se[mm,] = res$se
       }
     } # end each point
-    
+
     return( "completed")
   }
 

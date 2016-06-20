@@ -22,7 +22,7 @@ temperature.parameters = function( DS, p=NULL, sp="inla", current.year=NULL ) {
   if (sp=="gam"){
       p$project.root = project.datadirectory( p$project.name )
       p$libs = RLibrary( c( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "bigmemory", "fields" ) )
-      p$init.files = bioLibrary(  "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons" , "bio.temperature" )
+      p$libs = unique( c( p$libs, bioLibrary(  "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons" , "bio.temperature" ) ) )
 
       # p$tyears = c(1910:2013)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
       p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.

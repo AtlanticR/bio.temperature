@@ -17,8 +17,7 @@
     loc.archive = file.path( basedir, "archive", "profiles", p$spatial.domain )
     loc.basedata = file.path( basedir, "basedata", "rawdata", p$spatial.domain )
     dir.create( loc.basedata, recursive=T, showWarnings=F )
-    if (exists( "init.files", p)) LoadFiles( p$init.files )
-    if (exists( "libs", p)) RLibrary( p$libs )
+
     # OSD data series variables of interest
 
 
@@ -162,13 +161,12 @@
           }
         }
 
+      if (exists( "libs", p)) RLibrary( p$libs )
+
       # bring in snow crab, groundfish and OSD data ...
-
-      bioLibrary( "bio.snowcrab")  # only need the functions not the whole environment
-
-      set = snowcrab.db( DS="setInitial" )
-      mlu = minilog.db( DS="set.minilog.lookuptable" )
-      slu = seabird.db( DS="set.seabird.lookuptable" )
+      set = bio.snowcrab::snowcrab.db( DS="setInitial" )
+      mlu = bio.snowcrab::minilog.db( DS="set.minilog.lookuptable" )
+      slu = bio.snowcrab::seabird.db( DS="set.seabird.lookuptable" )
       set = merge( set, mlu, by= c("trip", "set"), all.x=TRUE, all.y=FALSE )
       set = merge( set, slu, by= c("trip", "set"), all.x=TRUE, all.y=FALSE )
       set$longitude =set$lon
@@ -179,10 +177,9 @@
 
       set = set[ ,c("minilog_uid", "seabird_uid", "longitude", "latitude", "oxyml", "salinity", "sigmat" ) ]
 
-      bioLibrary( "bio.groundfish")
-      grdfish = groundfish.db( "gshyd.georef" )
+      grdfish = bio.groundfish::groundfish.db( "gshyd.georef" )
 
-      Ydummy = hydro.db( DS="osd.rawdata", yr=2000, p=p ) [1,]  # dummy entry using year=2000
+      Ydummy = bio.groundfish::hydro.db( DS="osd.rawdata", yr=2000, p=p ) [1,]  # dummy entry using year=2000
       Ydummy$yr = NA
       Ydummy$dyear = 0.5
       Ydummy$id =  "dummy"
@@ -194,7 +191,7 @@
       for (iy in ip) {
         yt = p$runs[iy, "yrs"]
 
-        Y = hydro.db( DS="osd.rawdata", yr=yt, p=p )
+        Y =  bio.groundfish::hydro.db( DS="osd.rawdata", yr=yt, p=p )
           if ( is.null(Y) ) {
             Y = Ydummy
             Y$yr = yt
@@ -204,7 +201,7 @@
 
             Yid = cut( Y$dyear, breaks=dyears, include.lowest=T, ordered_result=TRUE )
             Y$id =  paste( round(Y$longitude,2), round(Y$latitude,2), Yid , sep="~" )
-            Y$depth = decibar2depth ( P=Y$pressure, lat=Y$latitude )
+            Y$depth = bio.utilities::decibar2depth ( P=Y$pressure, lat=Y$latitude )
             Y$oxyml = NA
             # next should not be necessary .. but just in case the osd data types get altered
             Y$temperature = as.numeric(Y$temperature )
@@ -213,7 +210,6 @@
           }
 
         Y$pressure = NULL
-
 
         if ("groundfish" %in% additional.data ) {
           gfkeep = c( "id", "sdepth", "temp", "sal", "oxyml", "lon", "lat", "yr", "date")
@@ -312,11 +308,13 @@
           }
         }
 
+      if (exists( "libs", p)) RLibrary( p$libs )
+
       dyears = (c(1:(p$nw+1))-1)  / p$nw # intervals of decimal years... fractional year breaks
 
       for (iy in ip) {
         yt = p$runs[iy, "yrs"]
-        Y = hydro.db( DS="profiles.annual", yr=yt, p=p )
+        Y = bio.groundfish::hydro.db( DS="profiles.annual", yr=yt, p=p )
         if (is.null(Y)) next()
         igood = which( Y$temperature >= -3 & Y$temperature <= 25 )  ## 25 is a bit high but in case some shallow data
         Y = Y[igood, ]
@@ -410,6 +408,8 @@
           }
         }
 
+        if (exists( "libs", p)) RLibrary( p$libs )
+
         for (iip in ip) {
           y = p$runs[iip, "yrs"]
           fn = file.path( loc.gridded , paste( "bottom", y, "rdata", sep="." ) )
@@ -420,7 +420,7 @@
           # must "force" the following to read data from a larger spatial extent
           # (as this is all that is currently stored) .. can used SSE specific
           # but that increases storgage and data duplication .. no need
-          tp = hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
+          tp = bio.groundfish::hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
 
           if (is.null( tp) ) next()
 					tp = rename.df( tp, "longitude", "lon")
