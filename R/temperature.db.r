@@ -121,7 +121,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     starttime = Sys.time()
 
 		# interpolated predictions over only missing data
-		spinterpdir =  file.path( project.datadirectory("bio.temperature"), "data", "interpolated", "spatial", p$spatial.domain )
+		spinterpdir =  file.path( project.datadirectory("bio.temperature"), "interpolated", "spatial", p$spatial.domain )
     dir.create( spinterpdir, recursive=T, showWarnings=F )
 
 		if (DS %in% c("spatial.interpolation")) {
