@@ -106,6 +106,8 @@
     a = which( point.in.polygon( t0$lon, t0$lat, scotianshelf$lon, scotianshelf$lat ) != 0 )
 
     t0 = t0[a,]
+
+    
  --- add prediction locations /times / depths / etc ....
 
     fp = data.frame( lon= -63, lat= 45 )

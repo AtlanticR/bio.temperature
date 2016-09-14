@@ -20,7 +20,8 @@
     }
 
     if ( p$tsmethod %in% c("ar" ) ) {
-        interpolate.ts = temperature.timeseries.interpolate.spectral  ## to do..
+        cat("TODO \n")
+        # interpolate.ts = temperature.timeseries.interpolate.spectral  ## to do..
     }
 
 
