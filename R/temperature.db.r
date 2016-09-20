@@ -215,8 +215,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
           P = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
           V = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
           for (iw in 1:p$nw) {
-            P[,iw] = spacetime.regrid ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
-            V[,iw] = spacetime.regrid ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
+            P[,iw] = spacetime.reproject ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
+            V[,iw] = spacetime.reproject ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
           }
           spinterpdir_sg = file.path( project.datadirectory("bio.temperature"), "data", "interpolated", "spatial", p1$spatial.domain )
           dir.create( spinterpdir_sg, recursive=T, showWarnings=F )

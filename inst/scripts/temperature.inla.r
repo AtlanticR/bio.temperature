@@ -1,7 +1,7 @@
 
   -- incomplete ..
 
-  p = bio.temperature::temperature.parameters( DS="bio.temperature", sp="inla", current.year=2016 )
+  p = bio.temperature::temperature.parameters( DS="inla", current.year=2016 )
 
   # p = temperature.db( p=p, DS="bigmemory.filenames" )
 

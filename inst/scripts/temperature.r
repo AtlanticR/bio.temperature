@@ -3,7 +3,7 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  p = bio.temperature::temperature.parameters( DS="bio.temperature", sp="gam", current.year=2016 )
+  p = bio.temperature::temperature.parameters( DS="gam", current.year=2016 )
 
   # ------------------------------
 
@@ -54,6 +54,76 @@
       # sometimes requires restart of R or even computer .. bigmemory memory leak or file caching
       tbot <- bigmemory::attach.big.matrix( p$descriptorfile.tbot  )
       tbot.se <- bigmemory::attach.big.matrix( p$descriptorfile.tbotse  )
+
+    p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using the beowulf network
+    # p = make.list( list( loc=sample.int( p$nP) ), Y=p ) # random order helps use all cpus
+    p = make.list( list( loc=sample.int( p$nP ) ), Y=p ) # random order helps use all cpus
+    parallel.run( temperature.timeseries.interpolate, p=p)
+    # temperature.timeseries.interpolate ( p=p )
+    temperature.db( p=p, DS="temporal.interpolation.redo" ) # save interpolation as time slices to disk
+
+
+    # 3. simple spatial interpolation
+    # NOTE this one does a regridding as selected by p$subregions ...
+    # ... it is required for the habitat lookup .. no way around it
+    # (complex/kriging takes too much time/cpu) ==> 3-4 hr/run
+    # using localhost in 2014 6+ hr for each run but with multiple cycles ~ 10 hr total
+    # use all clusters if available
+    p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
+    p$clusters = rep("localhost", detectCores() )
+    p = make.list( list( yrs=p$tyears), Y=p )
+    parallel.run( temperature.db, p=p, DS="spatial.interpolation.redo" )
+    #  temperature.db( p=p, DS="spatial.interpolation.redo" ) # 2hr in serial mode
+
+
+    # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
+    # temperature.db(  p=p, DS="bottom.statistics.annual.redo" )
+    # or parallel runs: ~ 1 to 2 GB / process
+    # 4 cpu's ~ 10 min
+    p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
+    p = make.list( list( yrs=p$tyears), Y=p )
+    parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
+    #  temperature.db( p=p, DS="bottom.statistics.annual.redo" )
+
+
+
+    # 5. climatology database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
+    p$bstats = c("tmean", "tamplitude", "wmin", "thalfperiod", "tsd" )
+    p$tyears.climatology = p$tyears  # or redefine it with : p$tyears.climatology = 1950:2015
+    temperature.db ( p=p, DS="climatology.redo")
+
+  }
+
+
+
+  if (create.interpolated.results.spacetime ) {
+    p = spacetime.parameters(p)
+
+    # 1. grid bottom data to internal spatial resolution ; <1 min
+    p = make.list( list( yrs=p$tyears), Y=p )
+    # parallel.run( hydro.db, p=p, DS="bottom.gridded.redo" )
+    hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
+    hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
+
+
+    # 2. temporal interpolations assuming some seasonal pattern
+    # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
+    # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
+    # define output mattrix
+    # predictions are made upon the locations defined by bathymetry "baseline"
+    p$nP = nrow( bathymetry.db( p=p, DS="baseline" ) )
+
+    
+    B = hydro.db( p=p, DS="bottom.gridded.all"  )
+    B$tiyr = lubridate::decimal_date ( B$date )
+    # globally remove all unrealistic data
+    keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
+    if (length(keep) > 0 ) B = B[ keep, ]
+    TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
+    keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
+    if (length(keep) > 0 ) B = B[ keep, ]
+
+    p = spacetime( method="space.time.seasonal", DATA=B, p=p )
 
     p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using the beowulf network
     # p = make.list( list( loc=sample.int( p$nP) ), Y=p ) # random order helps use all cpus
