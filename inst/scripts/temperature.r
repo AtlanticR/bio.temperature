@@ -97,7 +97,13 @@
 
 
   if (create.interpolated.results.spacetime ) {
-    p = spacetime.parameters(p)
+
+    p = bio.temperature::temperature.parameters( DS="bio.bathymetry.spacetime", current.year=2016 )
+
+    p = spacetime.parameters(p) 
+
+    p$variables$Y = "t"
+    p$variables$LOCS = c("plon", "plat")
 
     # 1. grid bottom data to internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
@@ -122,6 +128,7 @@
     TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
     keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
     if (length(keep) > 0 ) B = B[ keep, ]
+
 
     p = spacetime( method="space.time.seasonal", DATA=B, p=p )
 

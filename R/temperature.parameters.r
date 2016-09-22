@@ -23,8 +23,13 @@ temperature.parameters = function( DS, p=NULL, current.year=NULL ) {
   if (DS=="gam"){
       p$libs = RLibrary( c( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "bigmemory", "fields" ) )
       p$libs = unique( c( p$libs, bioLibrary(  "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons" , "bio.temperature" ) ) )
-
+     
+      p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution
+      p$spatial.domain.default = "canada.east"
+      p = spatial.parameters( p=p, type=p$spatial.domain.default )  # default grid and resolution
       # p$tyears = c(1910:2013)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
+      p$newyear = current.year
+     
       p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
       p$ny = length(p$tyears)
       p$nw = 10 # number of intervals in time within a year
@@ -42,10 +47,7 @@ temperature.parameters = function( DS, p=NULL, current.year=NULL ) {
       p$spmethod = "kernel.density" ## best
       p$theta = 5 # FFT kernel bandwidth (SD of kernel) for method p$spmethod = "kernel.density"
       p$nsd = 6 # number of SD distances to pad boundaries with 0 for FFT  in method  p$spmethod = "kernel.density
-      p$newyear = current.year
-      p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution
-      p$spatial.domain.default = "canada.east"
-      p = spatial.parameters( p=p, type=p$spatial.domain.default )  # default grid and resolution
+
     return(p)
   }
 
@@ -54,7 +56,13 @@ temperature.parameters = function( DS, p=NULL, current.year=NULL ) {
    
     p$libs = RLibrary( c( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "ff", "ffbase", "fields" ) )
     p$libs = unique( c( p$libs, bioLibrary(  "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons" , "bio.temperature" ) ) )
-  
+    
+    p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution
+    p$spatial.domain.default = "canada.east"
+    p = spatial.parameters( p=p, type=p$spatial.domain.default )  # default grid and resolution
+ 
+    p$newyear = current.year
+ 
     p$rootdir = file.path( p$project.root, "spacetime" )
 
     p$fn.P =  file.path( p$rootdir, paste( "spacetime", "predictions", p$spatial.domain, "rdata", sep=".") )
@@ -103,10 +111,7 @@ temperature.parameters = function( DS, p=NULL, current.year=NULL ) {
     p$spmethod = "kernel.density" ## best
     p$theta = 5 # FFT kernel bandwidth (SD of kernel) for method p$spmethod = "kernel.density"
     p$nsd = 6 # number of SD distances to pad boundaries with 0 for FFT  in method  p$spmethod = "kernel.density
-    p$newyear = current.year
-    p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution
-    p$spatial.domain.default = "canada.east"
-    p = spatial.parameters( p=p, type=p$spatial.domain.default )  # default grid and resolution
+
     return(p)
   }
 
