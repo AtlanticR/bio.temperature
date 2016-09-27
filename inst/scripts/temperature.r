@@ -102,8 +102,6 @@
 
     p = spacetime.parameters(p) 
 
-    p$variables$Y = "t"
-    p$variables$LOCS = c("plon", "plat")
 
     # 1. grid bottom data to internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
@@ -118,19 +116,27 @@
     # define output mattrix
     # predictions are made upon the locations defined by bathymetry "baseline"
     p$nP = nrow( bathymetry.db( p=p, DS="baseline" ) )
-
     
-    B = hydro.db( p=p, DS="bottom.gridded.all"  )
-    B$tiyr = lubridate::decimal_date ( B$date )
-    # globally remove all unrealistic data
-    keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
-    if (length(keep) > 0 ) B = B[ keep, ]
-    TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
-    keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
-    if (length(keep) > 0 ) B = B[ keep, ]
 
+    B = hydro.db( p=p, DS="spacetime.input" )
 
-    p = spacetime( method="space.time.seasonal", DATA=B, p=p )
+# default output grid
+tout = expand.grid( yr=p$tyears, dyear=1:p$nw )
+tout$tiyr = tout$yr + (tout$dyear-0.5) / p$nw # mid-points
+tout = tout[ order(tout$tiyr), ]
+
+    Pcov = bathymetry.db( p=p, DS="baseline" )
+    OUT  = list( 
+        LOCS=Pcov[,c("plon","plat")],
+        COV =Pcov[,c("z")],
+        TIME=tout$tiyr )          
+
+    p$variables$Y = "t"
+    p$variables$LOCS = c("plon", "plat")
+    p$variables$TIME = c( "tiyr" )
+    p$variables$COV = c("z")
+
+    p = spacetime( method="space.time.seasonal", DATA=list(input=B, output=OUT), p=p )
 
     p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using the beowulf network
     # p = make.list( list( loc=sample.int( p$nP) ), Y=p ) # random order helps use all cpus
