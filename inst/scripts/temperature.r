@@ -100,9 +100,6 @@
 
     p = bio.temperature::temperature.parameters( DS="bio.bathymetry.spacetime", current.year=2016 )
 
-    p = spacetime.parameters(p) 
-
-
     # 1. grid bottom data to internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
     # parallel.run( hydro.db, p=p, DS="bottom.gridded.redo" )
