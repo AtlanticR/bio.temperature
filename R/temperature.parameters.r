@@ -47,6 +47,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   # if not in one go, then the value must be reconstructed from the correct elements:
   p$sbbox = spacetime_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
   p$spacetime.stats.boundary.redo = FALSE ## estimate boundart of data to speed up stats collection? Do not need to redo if bounds have already been determined
+  p$non_convex_hull_alpha = 20  # radius in distance units (km) to use for determining boundaries
 
   p$nPreds = p$nplons * p$nplats
   # p$tyears = c(1910:2013)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
