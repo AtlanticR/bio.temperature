@@ -485,7 +485,18 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
     if (length(keep) > 0 ) B = B[ keep, ]
 
-    return (B)
+    # default output grid
+    tout = expand.grid( yr=p$tyears, dyear=1:p$nw )
+    tout$tiyr = tout$yr + (tout$dyear-0.5) / p$nw # mid-points
+    tout = tout[ order(tout$tiyr), ]
+
+    Pcov = bathymetry.db( p=p, DS="baseline" )
+    OUT  = list( 
+        LOCS=Pcov[,c("plon","plat")],
+        COV =Pcov[,c("z")],
+        TIME=tout$tiyr )          
+
+    return (list(input=B, output=OUT))
   }
 
 }

@@ -11,7 +11,7 @@
     if (method=="kernel.density" ) {
       #\\ method="kernel.density" : gaussian kernel density method using fields, input has same dimensions as output
       require(fields)
-      Z = matrix( NA, nrow=p$nplons, ncol=p$nplats)
+      Z = matrix( NaN, nrow=p$nplons, ncol=p$nplats)
       Z[p$O2M] = z
       kd = try( fields::image.smooth( Z, dx=p$pres, dy=p$pres, wght=p$wgts )$z )
       z[tofill] = kd[p$O2M][ tofill]
