@@ -27,13 +27,16 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
 
   p$spacetime_engine = "harmonics.1.depth" # see model form in spacetime.r (method="xyts")
   p$modelformula = formula( t ~ s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  )  # specified here to override default of harmonics.1
-  
-  p$variables = list()
-  p$variables$Y = "t"
-  p$variables$LOCS = c("plon", "plat")
-  p$variables$TIME = c( "tiyr" )
-  p$variables$COV = c("z")
-  
+  p$spacetime_covariate_modeltype="gam" 
+  p$spacetime_covariate_modelformula = formula( t ~ s(z) )
+
+  p$variables = list( 
+    Y = "t",
+    LOCS = c("plon", "plat"),
+    TIME = c( "tiyr" ),
+    COV = "z"
+  )
+
   p$dist.km = c( 2.5, 5, 7.5, 10, 12.5, 15 ) # "manhattan" distances to extend search for data
   p$maxdist = max(p$dist.km) # if using gstat  max dist to interpolate in space
   p$dist.max = max(p$dist.km) # length scale (km) of local analysis .. for acceptance into the local analysis/model
