@@ -19,16 +19,21 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$ny = length(p$tyears)
   p$nw = 10 # number of intervals in time within a year
   p$dyears = (c(1:p$nw)-1)  / p$nw # intervals of decimal years... fractional year breaks
+  p$dyear_centre = p$dyears[ round(p$nw/2) ] + (1/p$nw/2)
 
-  p$variogram.spacetime_engine = "gstat"  # "geoR" seg faults frequently ..
-  p$dist.mwin = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+  p$spacetime_variogram_engine = "gstat"  # "geoR" seg faults frequently ..
+
+  p$spacetime.prediction.range.proportion = 0.8 # when dist for modelling < p$spacetime.prediction.dist.min, thefraction of the distance to use for prediction (to keep the predictions well within bounds of  models )
+
+  p$spacetime.prediction.dist.min = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   p$upsampling = c( 1.1, 1.2, 1.5, 2 )  # local block search fractions
   p$downsampling = c( 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2 ) # local block search fractions  -- need to adjust based upon data density
 
   p$spacetime_engine = "harmonics.1.depth" # see model form in spacetime.r (method="xyts")
-  p$modelformula = formula( t ~ s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  )  # specified here to override default of harmonics.1
+  p$spacetime_engine_modelformula = formula( t ~ s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  )  # specified here to override default of harmonics.1
+
   p$spacetime_covariate_modeltype="gam" 
-  p$spacetime_covariate_modelformula = formula( t ~ s(z) )
+  p$spacetime_covariate_spacetime_engine_modelformula = formula( t ~ s(z, bs="ts") )
 
   p$variables = list( 
     Y = "t",
