@@ -59,7 +59,6 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$nsd = 6 # number of SD distances to pad boundaries with 0 for FFT  required in method  "harmonic.1/kernel.density
 
   p$spacetime.noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
-  p$Y_bounds = c(-3, 25) # absolute bounds of the Y (dependent) value
   p$quantile_bounds = c(0.001, 0.999) # remove these extremes in interpolations
 
   return(p)
