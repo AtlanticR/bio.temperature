@@ -1,5 +1,5 @@
 
-hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.data=c("groundfish", "snowcrab"), ...) {
+hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC"), ...) {
 
   # manipulate temperature databases from osd, groundfish and snow crab and grid them
   # OSD data source is
@@ -124,13 +124,26 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     }
   }
 
+  ## 
 
+  if (DS=="USSurvey_NEFSC") {
+    # data dump supplied by Adam Cook .. assumed to tbe bottom temperatures from their surveys in Gulf of Maine area?
+    ne = NULL
+    fn = file.path( project.datadirectory("bio.temperature"), "archive", "NEFSCTemps.rdata" )
+    if (file.exists(fn)) load(fn)
+    if (is.null(yr)) return(ne) # everything
+    i = which( lubridate::year( ne$timestamp)) %in% yr )
+    if (length(i) > 0) ne = ne[i,]    
+    return (ne)
+  }
+
+  
   # ----------------
 
   if (DS %in% c( "profiles.annual.redo", "profiles.annual" ) ) {
     # read in annual depth profiles then extract bottom temperatures
 
-    if (p$spatial.domain %in% c("SSE", "snowcrab")  ) p$spatial.domain="canada.east"  ## no point in having these as they are small subsets
+    if (p$spatial.domain %in% c("SSE", "snowcrab") ) p$spatial.domain="canada.east"  ## no point in having these as they are small subsets
 
     basedir = project.datadirectory("bio.temperature", "data" )
     loc.profile = file.path( basedir, "basedata", "profiles", p$spatial.domain )
@@ -178,7 +191,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
     grdfish = bio.groundfish::groundfish.db( "gshyd.georef" )
 
-    Ydummy = bio.groundfish::hydro.db( DS="osd.rawdata", yr=2000, p=p ) [1,]  # dummy entry using year=2000
+    Ydummy = bio.temperature::hydro.db( DS="osd.rawdata", yr=2000, p=p ) [1,]  # dummy entry using year=2000
     Ydummy$yr = NA
     Ydummy$dyear = 0.5
     Ydummy$id =  "dummy"
@@ -190,7 +203,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     for (iy in ip) {
       yt = p$runs[iy, "yrs"]
 
-      Y =  bio.groundfish::hydro.db( DS="osd.rawdata", yr=yt, p=p )
+      Y =  bio.temperature::hydro.db( DS="osd.rawdata", yr=yt, p=p )
         if ( is.null(Y) ) {
           Y = Ydummy
           Y$yr = yt
@@ -313,7 +326,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
     for (iy in ip) {
       yt = p$runs[iy, "yrs"]
-      Y = bio.groundfish::hydro.db( DS="profiles.annual", yr=yt, p=p )
+      Y = bio.temperature::hydro.db( DS="profiles.annual", yr=yt, p=p )
       if (is.null(Y)) next()
       igood = which( Y$temperature >= -3 & Y$temperature <= 25 )  ## 25 is a bit high but in case some shallow data
       Y = Y[igood, ]
@@ -419,7 +432,9 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
         # must "force" the following to read data from a larger spatial extent
         # (as this is all that is currently stored) .. can used SSE specific
         # but that increases storgage and data duplication .. no need
-        tp = bio.groundfish::hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
+        tne = bio.temperature::hydro.db( DS="USSurvey_NEFSC", yr=y ) 
+
+        tp = bio.temperature::hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
 
         if (is.null( tp) ) next()
 				tp = rename.df( tp, "longitude", "lon")
@@ -473,6 +488,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     return ( "Completed rebuild"  )
   }
 
+  # -----------------
+  
   if (DS=="spacetime.input") {
 
     B = hydro.db( p=p, DS="bottom.gridded.all"  )

@@ -55,8 +55,8 @@
     # use all clusters if available
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="spatial.interpolation.redo" )
-    #  temperature.db( p=p, DS="spatial.interpolation.redo" ) # 2hr in serial mode
+    parallel.run( temperature.db, p=p, DS="spacetime.prediction.redo" )
+    #  temperature.db( p=p, DS="spacetime.prediction.redo" ) # 2hr in serial mode
 
 
     # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
