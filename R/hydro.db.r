@@ -137,7 +137,56 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     return (ne)
   }
 
-  
+
+  # ----------------
+
+  if ( DS %in% c("ODF_ARCHIVE", "ODF_ARCHIVE.redo") ) {
+    # PTRAN/CHOIJ
+    loc = file.path( project.datadirectory("bio.temperature"), "data" )
+
+    DataDumpFromWindows = F
+    if ( DataDumpFromWindows ) {
+      loc = file.path("C:", "datadump")
+    }
+    dir.create( path=loc, recursive=T, showWarnings=F )
+
+    fn.root =  file.path( loc, "ODF_ARCHIVE" )
+    dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
+
+    out = NULL
+    if ( is.null(DS) | DS=="ODF_ARCHIVE" ) {
+      fl = list.files( path=fn.root, pattern="*.rdata", full.names=T )
+        for ( fny in fl ) {
+        load (fny)
+        out = rbind( out, odfdat )
+      }
+      return (out)
+    }
+
+    require(RODBC)
+    connect=odbcConnect( "ptran", 
+      uid=oracle.personal.user, pwd=oracle.personal.password, believeNRows=F)
+
+    for ( y in yr ) {
+      fny = file.path( fn.root, paste( y, "rdata", sep="."))
+      odfdat = sqlQuery( connect,  paste(
+             "select i*, substr(mission,4,4) year " ,
+      "    from ODF_ARCHIVE i " ,
+      "    where substr(MISSION,4,4)=", y, ";"
+      ) )
+
+      names(odfdat) =  tolower( names(odfdat) )
+      print(fny)
+      save(odfdat, file=fny, compress=T)
+      gc()  # garbage collection
+      print(y)
+    }
+
+    odbcClose(connect)
+    return (fn.root)
+
+  } 
+
   # ----------------
 
   if (DS %in% c( "profiles.annual.redo", "profiles.annual" ) ) {
@@ -432,7 +481,6 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
         # must "force" the following to read data from a larger spatial extent
         # (as this is all that is currently stored) .. can used SSE specific
         # but that increases storgage and data duplication .. no need
-        tne = bio.temperature::hydro.db( DS="USSurvey_NEFSC", yr=y ) 
 
         tp = bio.temperature::hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
 
@@ -441,6 +489,9 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
         tp = rename.df( tp, "latitude", "lat")
         tp = rename.df( tp, "temperature", "t")
         tp = rename.df( tp, "depth", "z")
+
+        tne = bio.temperature::hydro.db( DS="USSurvey_NEFSC", yr=y ) 
+        tp = rbind( tp, tne[,names(tp)] )
 
         tp$date = as.Date( tp$date ) # strip out time of day information
         tp$ddate = lubridate::decimal_date( tp$date )
