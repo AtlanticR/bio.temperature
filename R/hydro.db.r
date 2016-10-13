@@ -131,8 +131,9 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     ne = NULL
     fn = file.path( project.datadirectory("bio.temperature"), "archive", "NEFSCTemps.rdata" )
     if (file.exists(fn)) load(fn)
+    ne$id = paste(ne$plon, ne$plat, lubridate::date( ne$timestamp), sep="~" )
     if (is.null(yr)) return(ne) # everything
-    i = which( lubridate::year( ne$timestamp)) %in% yr )
+    i = which( lubridate::year( ne$timestamp) %in% yr )
     if (length(i) > 0) ne = ne[i,]    
     return (ne)
   }
