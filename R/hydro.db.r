@@ -164,16 +164,20 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
       return (out)
     }
 
-    require(RODBC)
-    connect=odbcConnect( "ptran", 
-      uid=oracle.personal.user, pwd=oracle.personal.password, believeNRows=F)
-
+    # require(RODBC)
+    require (ROracle)
+    connect = Oracle()
+    con =dbConnect( connect, username=oracle.personal.user, password=oracle.personal.password, dbname="PTRAN" )
+    
+    cruises   <- dbGetQuery(con, "select * from ODF_ARCHIVE.ODF_CRUISE_EVENT" )
+ 
     for ( y in yr ) {
       fny = file.path( fn.root, paste( y, "rdata", sep="."))
-      odfdat = sqlQuery( connect,  paste(
-             "select i*, substr(mission,4,4) year " ,
-      "    from ODF_ARCHIVE i " ,
-      "    where substr(MISSION,4,4)=", y, ";"
+      odfdat = sqlQuery( con,  paste(
+      " select * " ,
+      " from ODF_ARCHIVE.ODF_CRUISE_EVENT i, ODF_ARCHIVE.ODF_DATA j " ,
+      " where i.CRUISE_EVENT_ID(+)=j.DATA_VAL_ID ",
+      " and EXTRACT(YEAR from start_date_time) =", y, ";"
       ) )
 
       names(odfdat) =  tolower( names(odfdat) )

@@ -7,8 +7,9 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   if ( !exists("project.name", p) ) p$project.name="bio.temperature"
   p$project.root = project.datadirectory( p$project.name )
 
-  p$libs = RLibrary( c( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "bigmemory", "fields" ) )
-  p$libs = unique( c( p$libs, bioLibrary(  "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons" , "bio.temperature" ) ) )
+  p$libs = RLibrary( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv",
+    "ff", "ffbase", "fields",
+    "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons", "bio.temperature" )
 
   p$spatial.domain.default = "canada.east"
   p = spacetime_parameters( p=p, type=p$spatial.domain.default )  # default grid and resolution
@@ -32,10 +33,10 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$spacetime_engine = "harmonics.1.depth" # see model form in spacetime.r (method="xyts")
   p$spacetime_engine_modelformula = formula( t ~ s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  )  # specified here to override default of harmonics.1
 
-  p$spacetime_covariate_modeltype="gam" 
+  p$spacetime_covariate_modeltype="gam"
   p$spacetime_covariate_spacetime_engine_modelformula = formula( t ~ s(z, bs="ts") )
 
-  p$variables = list( 
+  p$variables = list(
     Y = "t",
     LOCS = c("plon", "plat"),
     TIME = c( "tiyr" ),
@@ -47,14 +48,13 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$dist.max = max(p$dist.km) # length scale (km) of local analysis .. for acceptance into the local analysis/model
   p$dist.min = min(p$dist.km) # lower than this .. subsampling occurs
   p$dist.pred = 0.95 # % of dist.max where **predictions** are retained (to remove edge effects)
-  
+
   p$n.min = p$ny*3 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
   # min number of data points req before attempting to model timeseries in a localized space
   p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
 
   # if not in one go, then the value must be reconstructed from the correct elements:
   p$sbbox = spacetime_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
-  p$spacetime.stats.boundary.redo = FALSE ## estimate boundart of data to speed up stats collection? Do not need to redo if bounds have already been determined
   p$non_convex_hull_alpha = 20  # radius in distance units (km) to use for determining boundaries
 
   p$nPreds = p$nplons * p$nplats
