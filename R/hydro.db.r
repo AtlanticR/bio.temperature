@@ -12,7 +12,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
   # no time records, just day/mon/year .. assume utc
 
-  basedir = project.datadirectory("bio.temperature", "data" )
+  basedir = file.path( project.datadirectory("bio.temperature"), "data" )
   loc.archive = file.path( basedir, "archive", "profiles", p$spatial.domain )
   loc.basedata = file.path( basedir, "basedata", "rawdata", p$spatial.domain )
   dir.create( loc.basedata, recursive=T, showWarnings=F )
@@ -81,9 +81,10 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
   if (DS=="osd.initial" ) {
     ## this is a data dump directly from Roger Pettipas for 2008 to 2015
     varstosave = c( "depth", "pressure", "latitude" ,"longitude" ,"temperature" ,"salinity" ,"sigmat", "date" )
-    fndata = file.path( loc.archive, "Data_2008-2014.csv.xz" )
-    XX = read.csv( file=xzfile(fndata), header=TRUE, stringsAsFactors=FALSE, na.strings="9999" )
-    names(XX) = tolower( names(XX) )
+    fndata = file.path( loc.archive, "Data_2008-2015.csv.xz" )
+    XX = read.csv( file=xzfile(fndata), header=FALSE, skip=2 , stringsAsFactors=FALSE, na.strings="9999" )
+    header = c("MissionID", "Latitude", "Longitude", "Year", "Month", "Day", "Hour", "Minute", "Pressure", "Temperature", "Salinity", "SigmaT" ,"StationID" )
+    names(XX) = tolower( header )
     XX$depth = decibar2depth ( P=XX$pressure, lat=XX$latitude )
     if (!exists( "sigmat", XX))  XX$sigmat = XX$sigma.t  # naming is variable
     XX$date_string = paste( XX$year, XX$month, XX$day, sep="-" )
@@ -112,8 +113,10 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
       print (y)
       fndata = file.path( loc.archive, paste( "Data_", y, ".csv.xz", sep="" ) )
       fn.out = file.path( loc.basedata, paste( "osd.rawdata", y, "rdata", sep=".") )
-      X = read.csv( file=xzfile(fndata), header=TRUE, stringsAsFactors=FALSE, na.strings="9999" )
-      names(X) = tolower( names(X) )
+      X = read.csv( file=xzfile(fndata), skip=2, stringsAsFactors=FALSE, na.strings="9999" )
+      # insert Header :
+      header = c("MissionID", "Latitude", "Longitude", "Year", "Month", "Day", "Hour", "Minute", "Pressure", "Temperature", "Salinity", "SigmaT" ,"StationID" )
+      names(X) = tolower( header )
       X$depth = decibar2depth ( P=X$pressure, lat=X$latitude )
       if (!exists( "sigmat", X))  X$sigmat = X$sigma.t  # naming is variable
       X$date_string = paste( X$year, X$month, X$day, sep="-" )
@@ -132,6 +135,13 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     fn = file.path( project.datadirectory("bio.temperature"), "archive", "NEFSCTemps.rdata" )
     if (file.exists(fn)) load(fn)
     ne$id = paste(ne$plon, ne$plat, lubridate::date( ne$timestamp), sep="~" )
+    ne$salinity = NA
+    ne$oxyml = NA
+    ne$sigmat = NA
+    ne$date = ne$timestamp
+    ne$yr = lubridate::year( ne$timestamp )
+    ne$dyear = lubridate::decimal_date( ne$timestamp ) - ne$yr 
+    ne = planar2lonlat( ne, proj.type=p$internal.projection )  # convert lon lat to coord system of p0
     if (is.null(yr)) return(ne) # everything
     i = which( lubridate::year( ne$timestamp) %in% yr )
     if (length(i) > 0) ne = ne[i,]    
@@ -278,7 +288,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
       Y$pressure = NULL
 
       if ("groundfish" %in% additional.data ) {
-        gfkeep = c( "id", "sdepth", "temp", "sal", "oxyml", "lon", "lat", "yr", "date")
+        gfkeep = c( "id", "sdepth", "temp", "sal", "oxyml", "lon", "lat", "yr", "timestamp")
         gf = grdfish[ which( grdfish$yr == yt ) , gfkeep ]
 				if (nrow(gf) > 0) {
 					gf$sigmat = NA
@@ -292,7 +302,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
       if ("snowcrab" %in% additional.data ) {
 
-        minilog = minilog.db( DS="basedata", Y=yt )
+        minilog = bio.snowcrab::minilog.db( DS="basedata", Y=yt )
 
         if (! is.null( nrow( minilog ) ) ) {
           minilog = merge( minilog, set, by="minilog_uid", all.x=TRUE, all.y=FALSE )
@@ -304,7 +314,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
           Y = rbind( Y, minilog[, names(Y) ] )
         }
 
-        seabird = seabird.db( DS="basedata", Y=yt )
+        seabird = bio.snowcrab::seabird.db( DS="basedata", Y=yt )
 				if ( !is.null( nrow( seabird ) ) ) {
           seabird = merge( seabird, set, by="seabird_uid", all.x=TRUE, all.y=FALSE )
           seabird$id = seabird$seabird_uid
@@ -495,7 +505,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
         tp = rename.df( tp, "temperature", "t")
         tp = rename.df( tp, "depth", "z")
 
-        tne = bio.temperature::hydro.db( DS="USSurvey_NEFSC", yr=y ) 
+        tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y ) 
+  
         tp = rbind( tp, tne[,names(tp)] )
 
         tp$date = as.Date( tp$date ) # strip out time of day information

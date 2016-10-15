@@ -11,11 +11,11 @@
 
     if (historical.data.redo) {
       hydro.db( DS="osd.rawdata.allfiles.redo", p=p )   # redo whole data set (historical) from 1910 to 2010
-      hydro.db( DS="osd.initial", p=p ) # 2008:2014
+      hydro.db( DS="osd.initial", p=p ) # 2008:2015
       hydro.db( DS="ODF_ARCHIVE", p=p, yr=1969:2015 ) # specify range or specific year
     }
     # Roger Petipas has been maintaining a database, the following loads this data
-    hydro.db( DS="osd.current", p=p, yr=2015:p$newyear ) # specify range or specific year
+    hydro.db( DS="osd.current", p=p, yr=2014:p$newyear ) # specify range or specific year
     hydro.db( DS="ODF_ARCHIVE", p=p, yr=p$newyear ) # specify range or specific year
 
     # Merge depth profiles from all data streams: OSD, groundfish, snowcrab, USSurvey_NEFSC
@@ -47,7 +47,7 @@
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
-    # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) ) # with no clusters defined, use local cpu's only
+    # p$clusters = c( rep("kaos",12), rep("nyx",12), rep("tartarus",12), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
     p = spacetime( method="xyts", DATA='hydro.db( p=p, DS="spacetime.input" )', p=p )
 
     # 3. simple spatial interpolation .. collect data from spacetime and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
