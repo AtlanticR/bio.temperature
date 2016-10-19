@@ -19,6 +19,8 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
   p$ny = length(p$tyears)
   p$nw = 10 # number of intervals in time within a year
+  p$nt = p$nw*p$ny # must specify, else assumed = 1
+
   p$dyears = (c(1:p$nw)-1)  / p$nw # intervals of decimal years... fractional year breaks
   p$dyear_centre = p$dyears[ round(p$nw/2) ] + (1/p$nw/2)
 

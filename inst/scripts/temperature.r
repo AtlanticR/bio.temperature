@@ -47,8 +47,8 @@
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
-    # p$clusters = c( rep("kaos",12), rep("nyx",12), rep("tartarus",12), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
-    p = spacetime( method="xyts", DATA='hydro.db( p=p, DS="spacetime.input" )', p=p )
+    # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
+    p = spacetime( DATA='hydro.db( p=p, DS="spacetime.input" )', p=p, storage.backend="bigmemory.ram" )
 
     # 3. simple spatial interpolation .. collect data from spacetime and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
     # ... it is required for the habitat lookup .. no way around it
