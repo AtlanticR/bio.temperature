@@ -574,7 +574,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     tout$tiyr = tout$yr + (tout$dyear-0.5) / p$nw # mid-points
     tout = tout[ order(tout$tiyr), ]
 
-    Pcov = bathymetry.db( p=p, DS="baseline" )
+    Pcov = bathymetry.db( p=p, DS="complete" )
+    Pcov = Pcov[ which(Pcov$z >0), ]
     OUT  = list( 
         LOCS=Pcov[,c("plon","plat")],
         COV =Pcov[,c("z")],

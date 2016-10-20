@@ -26,9 +26,9 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
 
   p$spacetime_variogram_engine = "gstat"  # "geoR" seg faults frequently ..
 
-  p$spacetime.prediction.range.proportion = 0.8 # when dist for modelling < p$spacetime.prediction.dist.min, thefraction of the distance to use for prediction (to keep the predictions well within bounds of  models )
+  p$spacetime_prediction_range_proportion = 0.8 # when dist for modelling < p$spacetime_prediction_dist_min, thefraction of the distance to use for prediction (to keep the predictions well within bounds of  models )
 
-  p$spacetime.prediction.dist.min = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+  p$spacetime_prediction_dist_min = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   p$upsampling = c( 1.1, 1.2, 1.5, 2 )  # local block search fractions
   p$downsampling = c( 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2 ) # local block search fractions  -- need to adjust based upon data density
 
@@ -36,7 +36,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$spacetime_engine_modelformula = formula( t ~ s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  )  # specified here to override default of harmonics.1
 
   p$spacetime_covariate_modeltype="gam"
-  p$spacetime_covariate_spacetime_engine_modelformula = formula( t ~ s(z, bs="ts") )
+  p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
 
   p$variables = list(
     Y = "t",
@@ -45,13 +45,13 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
     COV = "z"
   )
 
-  p$dist.km = c( 2.5, 5, 7.5, 10, 12.5, 15 ) # "manhattan" distances to extend search for data
+  p$dist.km = c( 5, 7.5, 10, 15, 20, 25 ) # "manhattan" distances to extend search for data
   p$maxdist = max(p$dist.km) # if using gstat  max dist to interpolate in space
-  p$dist.max = max(p$dist.km) # length scale (km) of local analysis .. for acceptance into the local analysis/model
-  p$dist.min = min(p$dist.km) # lower than this .. subsampling occurs
+  p$dist.max = max(p$dist.km)*2 # length scale (km) of local analysis .. for acceptance into the local analysis/model
+  p$dist.min = min(p$dist.km)/2 # lower than this .. subsampling occurs
   p$dist.pred = 0.95 # % of dist.max where **predictions** are retained (to remove edge effects)
 
-  p$n.min = p$ny*3 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
+  p$n.min = p$ny*5 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
   # min number of data points req before attempting to model timeseries in a localized space
   p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
 
