@@ -7,8 +7,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   if ( !exists("project.name", p) ) p$project.name="bio.temperature"
   p$project.root = project.datadirectory( p$project.name )
 
-  p$libs = RLibrary( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv",
-    "ff", "ffbase", "fields",
+  p$libs = RLibrary( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "raster", "fields",
     "bio.spacetime", "bio.utilities", "bio.bathymetry", "bio.polygons", "bio.temperature" )
 
   p$spatial.domain.default = "canada.east"
