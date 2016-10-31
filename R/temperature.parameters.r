@@ -25,31 +25,28 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
 
   p$spacetime_variogram_engine = "gstat"  # "geoR" seg faults frequently ..
 
-  p$spacetime_prediction_range_proportion = 0.8 # when dist for modelling < p$spacetime_prediction_dist_min, thefraction of the distance to use for prediction (to keep the predictions well within bounds of  models )
+  p$spacetime_rsquared_threshold = 0.3 # lower threshold
 
   p$spacetime_distance_prediction = 5 # this is a half window km
-
   p$spacetime_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   
-  p$upsampling = c( 1.1, 1.2, 1.5, 2, 3, 4 )  # local block search fractions
-  p$downsampling = c( 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2 ) # local block search fractions  -- need to adjust based upon data density
+  p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # fractions of median distance scale (dist.max, dist.min)/2 to try in local block search
+  
+  p$spacetime_engine = "gam" # see model form in spacetime.r (method="xyts")
+  p$spacetime_engine_modelformula = formula( 
+    t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
+      + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts") 
+      + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
 
-  p$spacetime_engine = "harmonics.1.depth.lonlat" # see model form in spacetime.r (method="xyts")
-  p$spacetime_engine_modelformula = formula( t ~s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") 
-    + s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  # specified here to override default of harmonics.1
+  p$spacetime_model_distance_weighted = TRUE
 
   p$spacetime_covariate_modeltype="gam"
   p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
 
-
-  p$variables = list(
-    Y = "t",
-    LOCS = c("plon", "plat"),
-    TIME = c( "tiyr" ),
-    COV = "z"
-  )
+  p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" ) 
 
   p$spacetime_family = gaussian
+  # or to make your own
   # p$spacetime_family = function(offset=0) {
   #   structure(list(
   #     linkfun = function(mu) mu + offset, 
@@ -60,14 +57,12 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   #     class = "link-glm" )
   # }
 
-  p$dist.km = c( 5, 7.5, 10, 15, 20, 25 ) # "manhattan" distances to extend search for data
-  p$maxdist = max(p$dist.km) # if using gstat  max dist to interpolate in space
-  p$dist.max = max(p$dist.km)*2 # length scale (km) of local analysis .. for acceptance into the local analysis/model
-  p$dist.min = min(p$dist.km)/2 # lower than this .. subsampling occurs
+  p$dist.max = 50 # length scale (km) of local analysis .. for acceptance into the local analysis/model
+  p$dist.min = 5 # lower than this .. subsampling occurs
 
   p$n.min = p$ny*3 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
   # min number of data points req before attempting to model timeseries in a localized space
-  p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
+  p$n.max = 6000 # numerical time/memory constraint -- anything larger takes too much time
 
   # if not in one go, then the value must be reconstructed from the correct elements:
   p$sbbox = spacetime_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
