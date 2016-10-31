@@ -55,19 +55,15 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   # }
 
   p$dist.max = 50 # length scale (km) of local analysis .. for acceptance into the local analysis/model
-  p$dist.min = 5 # lower than this .. subsampling occurs
+  p$dist.min = 2 # lower than this .. subsampling occurs
 
   p$n.min = p$ny*3 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
   # min number of data points req before attempting to model timeseries in a localized space
-  p$n.max = 6000 # numerical time/memory constraint -- anything larger takes too much time
+  p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
 
   # if not in one go, then the value must be reconstructed from the correct elements:
   p$sbbox = spacetime_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
   p$non_convex_hull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-
-  p$nPreds = p$nplons * p$nplats
-  # p$tyears = c(1910:2013)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
-
   p$theta = 5 # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
   p$nsd = 6 # number of SD distances to pad boundaries with 0 for FFT  required in method  "harmonic.1/kernel.density
 
