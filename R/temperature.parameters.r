@@ -42,7 +42,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
 
   p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" ) 
 
-  p$spacetime_family = gaussian
+  p$spacetime_family = gaussian()
   # or to make your own
   # p$spacetime_family = function(offset=0) {
   #   structure(list(
