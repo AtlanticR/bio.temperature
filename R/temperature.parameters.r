@@ -25,7 +25,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
 
   p$spacetime_variogram_engine = "gstat"  # "geoR" seg faults frequently ..
   p$spacetime_rsquared_threshold = 0.3 # lower threshold
-  p$spacetime_distance_prediction = 5 # this is a half window km
+  p$spacetime_distance_prediction = 7.5 # this is a half window km
   p$spacetime_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # fractions of median distance scale (dist.max, dist.min)/2 to try in local block search
   
@@ -54,7 +54,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   #     class = "link-glm" )
   # }
 
-  p$dist.max = 50 # length scale (km) of local analysis .. for acceptance into the local analysis/model
+  p$dist.max = 75 # length scale (km) of local analysis .. for acceptance into the local analysis/model
   p$dist.min = 2 # lower than this .. subsampling occurs
 
   p$n.min = p$ny*3 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
