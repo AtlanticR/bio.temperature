@@ -16,7 +16,10 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
 
   p$newyear = current.year
   p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
-  p$ny = length(p$tyears)
+  
+  p$spacetime_yrs = p$tyears  # yr labels for output
+
+  p$ny = length(p$spacetime_yrs)
   p$nw = 10 # number of intervals in time within a year
   p$nt = p$nw*p$ny # must specify, else assumed = 1
 
@@ -34,6 +37,20 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
     t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
       + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts") 
       + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
+
+    if (0) {
+      # alternative models .. testing
+      p$spacetime_engine = "bayesx"
+      p$spacetime_engine_modelformula = formula( 
+        t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
+          + sx(plon, bs="ps") + sx(plat,  bs="ps") 
+          + sx(plon, plat, cos.w, sin.w, yr, bs="te")
+      )
+      p$bayesx.method="MCMC"
+
+      
+    }
+
 
   p$spacetime_model_distance_weighted = TRUE
 
@@ -64,8 +81,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   # if not in one go, then the value must be reconstructed from the correct elements:
   p$sbbox = spacetime_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
   p$non_convex_hull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-  p$theta = 5 # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
-  p$nsd = 6 # number of SD distances to pad boundaries with 0 for FFT  required in method  "harmonic.1/kernel.density
+  p$theta = p$pres # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
 
   p$spacetime.noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
   p$quantile_bounds = c(0.001, 0.999) # remove these extremes in interpolations
