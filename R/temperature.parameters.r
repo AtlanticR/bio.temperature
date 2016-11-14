@@ -47,12 +47,12 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
           + sx(plon, plat, cos.w, sin.w, yr, bs="te")
       )
       p$bayesx.method="MCMC"
-
-      
     }
 
 
   p$spacetime_model_distance_weighted = TRUE
+  
+  p$model.covariates.globally = TRUE
 
   p$spacetime_covariate_modeltype="gam"
   p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
