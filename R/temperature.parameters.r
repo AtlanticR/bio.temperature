@@ -38,13 +38,24 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
       + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts") 
       + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
 
+  # other possibilities:
+    #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ', 
+    #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ', 
+    #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ', 
+    #     seasonal.smoothed.depth.lonlat.complex = ' s(yr, dyear, bs="ts") + s(yr, k=3, bs="ts") + s(dyear, bs="cc") +s(z, bs="ts") +s(plon, bs="ts") +s(plat, bs="ts") + s(plon, plat, by=tiyr, k=10, bs="ts" ) ', 
+    #     harmonics.1 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w)  ', 
+    #     harmonics.2 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) + s(yr, cos.w2) + s(yr, sin.w2) + s(cos.w2) + s( sin.w2 ) ' , 
+    #     harmonics.3 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) + s(yr, cos.w2) + s(yr, sin.w2) + s(cos.w2) + s( sin.w2 ) + s(yr, cos.w3) + s(yr, sin.w3)  + s(cos.w3) + s( sin.w3 ) ',
+    #     harmonics.1.depth = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  ', 
+    #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ', 
+
     if (0) {
       # alternative models .. testing
       p$spacetime_engine = "bayesx"
       p$spacetime_engine_modelformula = formula( 
         t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
           + sx(plon, bs="ps") + sx(plat,  bs="ps") 
-          + sx(plon, plat, cos.w, sin.w, yr, bs="te")
+          + sx(plon, plat, cos.w, sin.w, yr, bs="te")  # te is tensor spline
       )
       p$bayesx.method="MCMC"
     }
@@ -54,15 +65,16 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   
   p$model.covariates.globally = TRUE
 
-  # use bayesx method for covariate modelling
-  p$spacetime_covariate_modeltype="bayesx"
-  p$spacetime_covariate_modelformula = formula( t ~ sx(z, bs="tp") )
-  p$bayesx.method ="MCMC"
-  
   if (0) {
+    # do not use bayesx method for covariate modelling .. prediction step is kind of slow
+    p$spacetime_covariate_modeltype="bayesx"
+    p$spacetime_covariate_modelformula = formula( t ~ sx(z, bs='ps') )
+    p$bayesx_covariate_method ="REML"
+    p$bayesx_covariate_family = "gaussian"  # must be text ... bayesx has a different convention
+  }
+
     p$spacetime_covariate_modeltype="gam"
     p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
-  }
 
   p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" ) 
 
