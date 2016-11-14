@@ -54,8 +54,15 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   
   p$model.covariates.globally = TRUE
 
-  p$spacetime_covariate_modeltype="gam"
-  p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
+  # use bayesx method for covariate modelling
+  p$spacetime_covariate_modeltype="bayesx"
+  p$spacetime_covariate_modelformula = formula( t ~ sx(z, bs="tp") )
+  p$bayesx.method ="MCMC"
+  
+  if (0) {
+    p$spacetime_covariate_modeltype="gam"
+    p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
+  }
 
   p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" ) 
 
