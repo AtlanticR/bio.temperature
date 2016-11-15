@@ -64,17 +64,8 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$spacetime_model_distance_weighted = TRUE
   
   p$model.covariates.globally = TRUE
-
-  if (0) {
-    # do not use bayesx method for covariate modelling .. prediction step is kind of slow
-    p$spacetime_covariate_modeltype="bayesx"
-    p$spacetime_covariate_modelformula = formula( t ~ sx(z, bs='ps') )
-    p$bayesx_covariate_method ="REML"
-    p$bayesx_covariate_family = "gaussian"  # must be text ... bayesx has a different convention
-  }
-
-    p$spacetime_covariate_modeltype="gam"
-    p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
+  p$spacetime_covariate_modeltype="gam"
+  p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
 
   p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" ) 
 
