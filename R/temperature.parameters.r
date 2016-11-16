@@ -50,7 +50,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
     #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ', 
 
     if (0) {
-      # alternative models .. testing
+      # alternative models .. testing .. problem is tat SE of fit is not accessible?
       p$spacetime_engine = "bayesx"
       p$spacetime_engine_modelformula = formula( 
         t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
