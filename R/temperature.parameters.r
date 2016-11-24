@@ -17,9 +17,8 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$newyear = current.year
   p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
 
-  p$spacetime_yrs = p$tyears  # yr labels for output
-
-  p$ny = length(p$spacetime_yrs)
+  p$yrs = p$tyears  # yr labels for output
+  p$ny = length(p$yrs)
   p$nw = 10 # number of intervals in time within a year
   p$nt = p$nw*p$ny # must specify, else assumed = 1
 
@@ -32,6 +31,7 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # fractions of median distance scale (dist.max, dist.min)/2 to try in local block search
 
   p$spacetime_engine = "gam" # see model form in spacetime.r (method="xyts")
+  p$spacetime_engine = "gaussianprocess2Dt"
   p$spacetime_engine_modelformula = formula(
     t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
       + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
@@ -48,9 +48,8 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
     #     harmonics.1.depth = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  ',
     #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ',
 
-    if (0) {
+    if (p$spacetime_engine == "bayesx") {
       # alternative models .. testing .. problem is tat SE of fit is not accessible?
-      p$spacetime_engine = "bayesx"
       p$spacetime_engine_modelformula = formula(
         t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
           + sx(plon, bs="ps") + sx(plat,  bs="ps")
