@@ -28,15 +28,19 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$spacetime_rsquared_threshold = 0.3 # lower threshold
   p$spacetime_distance_prediction = 7.5 # this is a half window km
   p$spacetime_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-  p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # fractions of median distance scale (dist.max, dist.min)/2 to try in local block search
+  
+  if (!exists("spacetime_engine", p)) p$spacetime_engine = "gam" 
 
-  p$spacetime_engine = "gam" # see model form in spacetime.r (method="xyts")
-  p$spacetime_engine = "gaussianprocess2Dt"
-  p$spacetime_engine_modelformula = formula(
-    t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
-      + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
-      + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
-
+  if (p$spacetime_engine == "gaussianprocess2Dt") {
+    
+  }
+  
+  if (p$spacetime_engine =="gam") {
+    p$spacetime_engine_modelformula = formula(
+      t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
+        + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
+        + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
+  # more than 100 knots and it takes a very long time
   # other possibilities:
     #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
     #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
@@ -47,20 +51,21 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
     #     harmonics.3 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) + s(yr, cos.w2) + s(yr, sin.w2) + s(cos.w2) + s( sin.w2 ) + s(yr, cos.w3) + s(yr, sin.w3)  + s(cos.w3) + s( sin.w3 ) ',
     #     harmonics.1.depth = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  ',
     #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ',
+    p$spacetime_model_distance_weighted = TRUE
+  }
 
-    if (p$spacetime_engine == "bayesx") {
-      # alternative models .. testing .. problem is tat SE of fit is not accessible?
-      p$spacetime_engine_modelformula = formula(
-        t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
-          + sx(plon, bs="ps") + sx(plat,  bs="ps")
-          + sx(plon, plat, cos.w, sin.w, yr, bs="te")  # te is tensor spline
-      )
-      p$bayesx.method="MCMC"
-    }
+  if (p$spacetime_engine == "bayesx") {
+    # alternative models .. testing .. problem is tat SE of fit is not accessible?
+    p$spacetime_engine_modelformula = formula(
+      t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
+        + sx(plon, bs="ps") + sx(plat,  bs="ps")
+        + sx(plon, plat, cos.w, sin.w, yr, bs="te")  # te is tensor spline
+    )
+    p$bayesx.method="MCMC"
+    p$spacetime_model_distance_weighted = FALSE
+  }
 
-
-  p$spacetime_model_distance_weighted = TRUE
-
+  # using covariates as a first pass essentially makes it kriging with external drift
   p$model.covariates.globally = TRUE
   p$spacetime_covariate_modeltype="gam"
   p$spacetime_covariate_modelformula = formula( t ~ s(z, bs="ts") )
@@ -68,21 +73,8 @@ temperature.parameters = function( p=NULL, current.year=NULL ) {
   p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
 
   p$spacetime_family = gaussian()
-  # or to make your own
-  # p$spacetime_family = function(offset=0) {
-  #   structure(list(
-  #     linkfun = function(mu) mu + offset,
-  #     linkinv = function(eta) mu - offset,
-  #     mu.eta = function(eta) NA,
-  #     valideta = function(eta) TRUE,
-  #     name = paste0("logexp(", offset, ")") ),
-  #     class = "link-glm" )
-  # }
-
-  p$dist.max = 75 # length scale (km) of local analysis .. for acceptance into the local analysis/model
-  p$dist.min = 2 # lower than this .. subsampling occurs
-
-  p$n.min = p$ny*3 # n.min/n.max changes with resolution: at p$pres=0.25, p$dist.max=25: the max count expected is 40000
+  
+  p$n.min = p$ny*3 # n.min/n.max changes with resolution
   # min number of data points req before attempting to model timeseries in a localized space
   p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
 
