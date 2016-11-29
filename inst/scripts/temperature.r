@@ -37,6 +37,10 @@
 
   if (create.interpolated.results.spacetime ) {
 
+    p$spacetime_engine="spate"
+
+    p = bio.temperature::temperature.parameters( DS="spacetime", p=p )
+    
     # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
     # parallel.run( hydro.db, p=p, DS="bottom.gridded.redo" )
