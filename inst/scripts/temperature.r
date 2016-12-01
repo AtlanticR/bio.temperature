@@ -38,7 +38,8 @@
   if (create.interpolated.results.spacetime ) {
 
     p$spacetime_engine="spate"
-
+    p$nclusters_pred = 4  # for generating prediction surface
+    
     p = bio.temperature::temperature.parameters( DS="spacetime", p=p )
     
     # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
