@@ -37,7 +37,7 @@
 
   if (create.interpolated.results.sthm ) {
 
-    p$sthm_engine="spate"
+    p$sthm_local_modelengine="spate"
     p$nclusters_pred = 4  # for generating prediction surface
     
     p = bio.temperature::temperature.parameters( DS="sthm", p=p )
