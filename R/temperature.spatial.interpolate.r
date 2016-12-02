@@ -41,7 +41,7 @@
     if (method=="inverse.distance" ) {
       dta = cbind( p$O, z)
       names(dta) = c("plon", "plat", "z")
-      gs = try( gstat( id="z", formula=z~1, locations=~plon+plat, data=dta[-tofill,], maxdist=p$spacetime_distance_max, set=list(idp=.5)), silent=TRUE )
+      gs = try( gstat( id="z", formula=z~1, locations=~plon+plat, data=dta[-tofill,], maxdist=p$spatial_distance_max, set=list(idp=.5)), silent=TRUE )
       if ( ! "try-error" %in% class(gs) ) {
         preds = try( predict( object=gs, newdata=dta[tofill,]  ) )
         if ( ! (class(preds) %in% "try-error") ) z[tofill] = preds[,3]

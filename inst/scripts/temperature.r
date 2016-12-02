@@ -35,12 +35,12 @@
   # Basic data uptake now complete  .. move to interpolations
   # ------------------------------
 
-  if (create.interpolated.results.spacetime ) {
+  if (create.interpolated.results.sthm ) {
 
-    p$spacetime_engine="spate"
+    p$sthm_engine="spate"
     p$nclusters_pred = 4  # for generating prediction surface
     
-    p = bio.temperature::temperature.parameters( DS="spacetime", p=p )
+    p = bio.temperature::temperature.parameters( DS="sthm", p=p )
     
     # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
@@ -48,22 +48,22 @@
     hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
     hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
 
-    # 2. spacetime interpolations assuming some seasonal pattern
+    # 2. sthm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
-    p = spacetime( DATA='hydro.db( p=p, DS="spacetime.input" )', p=p, storage.backend="bigmemory.ram" )
+    p = sthm( DATA='hydro.db( p=p, DS="sthm.input" )', p=p, storage.backend="bigmemory.ram" )
 
-    # 3. simple spatial interpolation .. collect data from spacetime and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
+    # 3. simple spatial interpolation .. collect data from sthm and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
     # ... it is required for the habitat lookup .. no way around it
     # (complex/kriging takes too much time/cpu) ==> 3-4 hr/run
     # using localhost in 2014 6+ hr for each run but with multiple cycles ~ 10 hr total
     # use all clusters if available
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="spacetime.prediction.redo" )
-    #  temperature.db( p=p, DS="spacetime.prediction.redo" ) # 2hr in serial mode
+    parallel.run( temperature.db, p=p, DS="sthm.prediction.redo" )
+    #  temperature.db( p=p, DS="sthm.prediction.redo" ) # 2hr in serial mode
 
 
     # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
@@ -93,7 +93,7 @@
 
     for ( gr in p$subregions ) {
       print (gr)
-      p = spacetime_parameters(  p=p, type= gr )
+      p = spatial_parameters(  p=p, type= gr )
       if ( length(p$clusters) > 1 ) {
         parallel.run( temperature.db, p=p, DS="complete.redo")
         parallel.run( hydro.map, p=p, type="annual"  )
