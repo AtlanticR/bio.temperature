@@ -2,22 +2,22 @@
 temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 
 
-  if (DS %in% c(  "sthm.prediction.mean", "sthm.prediction.sd", "sthm.prediction.redo", "sthm.prediction" )){
+  if (DS %in% c(  "conker.prediction.mean", "conker.prediction.sd", "conker.prediction.redo", "conker.prediction" )){
 
 		# interpolated predictions over only missing data
-		savedir = file.path(p$project.root, "sthm", p$spatial.domain )
-    # dir.create( savedir, recursive=T, showWarnings=F )  # created by sthm
+		savedir = file.path(p$project.root, "conker", p$spatial.domain )
+    # dir.create( savedir, recursive=T, showWarnings=F )  # created by conker
 
-    if (DS %in% c("sthm.prediction", "sthm.prediction.mean")) {
+    if (DS %in% c("conker.prediction", "conker.prediction.mean")) {
       P = NULL
-      fn1 = file.path( savedir, paste("sthm.prediction.mean",  yr, "rdata", sep=".") )
+      fn1 = file.path( savedir, paste("conker.prediction.mean",  yr, "rdata", sep=".") )
       if (file.exists( fn1) ) load(fn1)
       return ( P )
     }
 
-    if (DS %in% c("sthm.prediction.sd")) {
+    if (DS %in% c("conker.prediction.sd")) {
       V = NULL
-      fn2 = file.path( savedir, paste("sthm.prediction.sd",  yr, "rdata", sep=".") )
+      fn2 = file.path( savedir, paste("conker.prediction.sd",  yr, "rdata", sep=".") )
       V =NULL
       if (file.exists( fn2) ) load(fn2)
       return ( V )
@@ -29,8 +29,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     for ( r in ip ) {
       y = p$runs[r, "yrs"]
       # default domain
-      PP0 = temperature.db( p, DS="sthm.prediction.mean", yr=yr)
-      VV0 = temperature.db( p, DS="sthm.prediction.sd", yr=yr)
+      PP0 = temperature.db( p, DS="conker.prediction.mean", yr=yr)
+      VV0 = temperature.db( p, DS="conker.prediction.sd", yr=yr)
       p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
       p$wght = fields::setup.image.smooth( nrow=p0$nplons, ncol=p0$nplats, dx=p0$pres, dy=p0$pres,
               theta=p$theta, xwidth=p$nsd*p$theta, ywidth=p$nsd*p$theta )
@@ -45,10 +45,10 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
             P[,iw] = spatial_warp ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
             V[,iw] = spatial_warp ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
           }
-          savedir_sg = file.path(p$project.root, "sthm", p1$spatial.domain ) 
+          savedir_sg = file.path(p$project.root, "conker", p1$spatial.domain ) 
           dir.create( savedir_sg, recursive=T, showWarnings=F )
-          fn1_sg = file.path( savedir_sg, paste("sthm.prediction.mean",  y, "rdata", sep=".") )
-          fn2_sg = file.path( savedir_sg, paste("sthm.prediction.sd",  y, "rdata", sep=".") )
+          fn1_sg = file.path( savedir_sg, paste("conker.prediction.mean",  y, "rdata", sep=".") )
+          fn2_sg = file.path( savedir_sg, paste("conker.prediction.sd",  y, "rdata", sep=".") )
           save( P, file=fn1_sg, compress=T )
           save( V, file=fn2_sg, compress=T )
           print (fn1_sg)
@@ -80,13 +80,13 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 			print ( paste("Year:", y)  )
 
 			O = bathymetry.db( p=p, DS="baseline" )
-      P = temperature.db( p=p, DS="sthm.prediction.mean", yr=y  )
+      P = temperature.db( p=p, DS="conker.prediction.mean", yr=y  )
    		P[ P < -2 ] = -2
 		  P[ P > 30 ] = 30
 		  ibaddata = which( !is.finite(P) )
 			P[ ibaddata ] = mean(P, na.rm=T )
 
-			V = temperature.db( p=p, DS="sthm.prediction.sd", yr=y  )
+			V = temperature.db( p=p, DS="conker.prediction.sd", yr=y  )
 			V[ V < 0.1 ] = 100  # shrink weighting of unreasonably small SEs
 		  V[ which( !is.finite(V)) ] = 1000 # "
 			V[ ibaddata ] = 10000 # " smaller still

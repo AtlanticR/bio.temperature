@@ -24,7 +24,7 @@
         # interpolate.ts = temperature.timeseries.interpolate.spectral  ## to do..
     }
 
-    B = hydro.db( p=p, DS="sthm.input"  )
+    B = hydro.db( p=p, DS="conker.input"  )
 
     P = bathymetry.db( p=p, DS="baseline" )
     tbot <- bigmemory::attach.big.matrix( p$descriptorfile.tbot  )

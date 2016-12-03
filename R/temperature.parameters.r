@@ -37,24 +37,24 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     return(p)
   }
 
-  if (DS=="sthm") {
+  if (DS=="conker") {
 
-    p$libs = RLibrary( c( p$libs, "sthm" ) ) # required for parallel processing
+    p$libs = RLibrary( c( p$libs, "conker" ) ) # required for parallel processing
 
-    if (!exists("sthm_local_modelengine", p)) {
-      message( "'sthm_local_modelengine' was not specified, using gam as default")
-      p$sthm_local_modelengine = "gam" 
+    if (!exists("conker_local_modelengine", p)) {
+      message( "'conker_local_modelengine' was not specified, using gam as default")
+      p$conker_local_modelengine = "gam" 
     }
 
-    if (p$sthm_local_modelengine == "spate" ){
+    if (p$conker_local_modelengine == "spate" ){
 
-    } else if (p$sthm_local_modelengine == "gaussianprocess2Dt") {
+    } else if (p$conker_local_modelengine == "gaussianprocess2Dt") {
       
       message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
 
-    } else if (p$sthm_local_modelengine =="gam") {
-      p$sthm_local_family = gaussian()
-      p$sthm_local_modelformula = formula(
+    } else if (p$conker_local_modelengine =="gam") {
+      p$conker_local_family = gaussian()
+      p$conker_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
           + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
@@ -69,54 +69,54 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         #     harmonics.3 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) + s(yr, cos.w2) + s(yr, sin.w2) + s(cos.w2) + s( sin.w2 ) + s(yr, cos.w3) + s(yr, sin.w3)  + s(cos.w3) + s( sin.w3 ) ',
         #     harmonics.1.depth = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  ',
         #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ',
-        p$sthm_local_model_distanceweighted = TRUE
+        p$conker_local_model_distanceweighted = TRUE
     
-    } else if (p$sthm_local_modelengine == "bayesx") {
+    } else if (p$conker_local_modelengine == "bayesx") {
 
       # bayesx families are specified as characters, this forces it to pass as is and 
-      # then the next does the transformation internal to the "sthm__bayesx"
-      p$sthm_local_family = gaussian() 
-      p$sthm_local_family_bayesx = "gaussian" 
+      # then the next does the transformation internal to the "conker__bayesx"
+      p$conker_local_family = gaussian() 
+      p$conker_local_family_bayesx = "gaussian" 
 
       # alternative models .. testing .. problem is that SE of fit is not accessible?
-      p$sthm_local_modelformula = formula(
+      p$conker_local_modelformula = formula(
         t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
           + sx(plon, bs="ps") + sx(plat,  bs="ps")
           + sx(plon, plat, cos.w, sin.w, yr, bs="te")  # te is tensor spline
       )
-      p$sthm_local_model_bayesxmethod="MCMC"
-      p$sthm_local_model_distanceweighted = FALSE
+      p$conker_local_model_bayesxmethod="MCMC"
+      p$conker_local_model_distanceweighted = FALSE
     
     } else {
     
-      message( "The specified sthm_local_modelengine is not tested/supported ... you are on your own ;) ..." )
+      message( "The specified conker_local_modelengine is not tested/supported ... you are on your own ;) ..." )
 
     }
 
-    p$sthm_rsquared_threshold = 0.3 # lower threshold
-    p$sthm_distance_prediction = 7.5 # this is a half window km
-    p$sthm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+    p$conker_rsquared_threshold = 0.3 # lower threshold
+    p$conker_distance_prediction = 7.5 # this is a half window km
+    p$conker_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
 
     # using covariates as a first pass essentially makes it kriging with external drift
-    p$sthm_global_modelengine = "gam"
-    p$sthm_global_modelformula = formula( t ~ s(z, bs="ts") )
-    p$sthm_global_family = gaussian()
+    p$conker_global_modelengine = "gam"
+    p$conker_global_modelformula = formula( t ~ s(z, bs="ts") )
+    p$conker_global_family = gaussian()
 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
   
     # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
-    p$sthm_variogram_method = "fast"
+    p$conker_variogram_method = "fast"
   
     p$n.min = p$ny*3 # n.min/n.max changes with resolution
     # min number of data points req before attempting to model timeseries in a localized space
     p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
 
     # if not in one go, then the value must be reconstructed from the correct elements:
-    p$sthm_sbox = sthm_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
-    p$sthm_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-    p$sthm_theta = p$pres # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
+    p$conker_sbox = conker_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
+    p$conker_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
+    p$conker_theta = p$pres # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
 
-    p$sthm_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
+    p$conker_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
     p$quantile_bounds = c(0.001, 0.999) # remove these extremes in interpolations
 
     return(p)
