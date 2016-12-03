@@ -103,7 +103,10 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$sthm_global_family = gaussian()
 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
-    
+  
+    # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
+    p$sthm_variogram_method = "fast"
+  
     p$n.min = p$ny*3 # n.min/n.max changes with resolution
     # min number of data points req before attempting to model timeseries in a localized space
     p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
