@@ -70,6 +70,18 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         #     harmonics.1.depth = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  ',
         #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ',
         p$conker_local_model_distanceweighted = TRUE
+
+    } else if (p$conker_local_modelengine =="twostep") {
+      p$conker_local_family = gaussian()
+      p$conker_local_modelformula = formula(
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
+          + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
+          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
+        # same as GAM model 
+      p$conker_local_model_distanceweighted = TRUE
+    
+    } else if (p$conker_local_modelengine == "bayesx") {
+
     
     } else if (p$conker_local_modelengine == "bayesx") {
 
@@ -111,13 +123,11 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     # min number of data points req before attempting to model timeseries in a localized space
     p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
 
-    # if not in one go, then the value must be reconstructed from the correct elements:
-    p$conker_sbox = conker_db( p=p, DS="statistics.box" ) # bounding box and resoltuoin of output statistics defaults to 1 km X 1 km
     p$conker_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
     p$conker_theta = p$pres # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
 
     p$conker_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
-    p$quantile_bounds = c(0.001, 0.999) # remove these extremes in interpolations
+    p$conker_quantile_bounds = c(0.001, 0.999) # remove these extremes in interpolations
 
     return(p)
   }
