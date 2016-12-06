@@ -41,14 +41,16 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$libs = RLibrary( c( p$libs, "conker" ) ) # required for parallel processing
 
+
     if (!exists("conker_local_modelengine", p)) {
+
       message( "'conker_local_modelengine' was not specified, using gam as default")
-      p$conker_local_modelengine = "gam" 
+      p$conker_local_modelengine = "gam" # default is gam ..
+      p$conker_local_modelengine = "twostep" # testing twostep ~ hybrid of gam + kernel density ..
+       
     }
 
-    if (p$conker_local_modelengine == "spate" ){
-
-    } else if (p$conker_local_modelengine == "gaussianprocess2Dt") {
+    if (p$conker_local_modelengine == "gaussianprocess2Dt") {
       
       message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
 
@@ -63,12 +65,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
         #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
         #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
-        #     seasonal.smoothed.depth.lonlat.complex = ' s(yr, dyear, bs="ts") + s(yr, k=3, bs="ts") + s(dyear, bs="cc") +s(z, bs="ts") +s(plon, bs="ts") +s(plat, bs="ts") + s(plon, plat, by=tiyr, k=10, bs="ts" ) ',
-        #     harmonics.1 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w)  ',
-        #     harmonics.2 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) + s(yr, cos.w2) + s(yr, sin.w2) + s(cos.w2) + s( sin.w2 ) ' ,
-        #     harmonics.3 = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) + s(yr, cos.w2) + s(yr, sin.w2) + s(cos.w2) + s( sin.w2 ) + s(yr, cos.w3) + s(yr, sin.w3)  + s(cos.w3) + s( sin.w3 ) ',
-        #     harmonics.1.depth = ' s(yr) + s(yr, cos.w) + s(yr, sin.w) + s(cos.w) + s(sin.w) +s(z)  ',
-        #     harmonics.1.depth.lonlat = 's(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts") +s(plon,k=3, bs="ts") +s(plat, k=3, bs="ts") + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") ',
         p$conker_local_model_distanceweighted = TRUE
 
     } else if (p$conker_local_modelengine =="twostep") {
@@ -79,9 +75,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
         # same as GAM model 
       p$conker_local_model_distanceweighted = TRUE
-    
-    } else if (p$conker_local_modelengine == "bayesx") {
-
     
     } else if (p$conker_local_modelengine == "bayesx") {
 
@@ -104,10 +97,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       message( "The specified conker_local_modelengine is not tested/supported ... you are on your own ;) ..." )
 
     }
-
-    p$conker_rsquared_threshold = 0.3 # lower threshold
-    p$conker_distance_prediction = 7.5 # this is a half window km
-    p$conker_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+    
 
     # using covariates as a first pass essentially makes it kriging with external drift
     p$conker_global_modelengine = "gam"
@@ -116,6 +106,11 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
   
+
+    p$conker_distance_scale = 50 # km ... approx guess of 95% AC range 
+    p$conker_distance_prediction = 10 # this is a half window km
+    p$conker_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+
     # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
     p$conker_variogram_method = "fast"
   
@@ -126,6 +121,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$conker_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
     p$conker_theta = p$pres # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
 
+    p$conker_rsquared_threshold = 0.25 # lower threshold
     p$conker_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
     p$conker_quantile_bounds = c(0.001, 0.999) # remove these extremes in interpolations
 
