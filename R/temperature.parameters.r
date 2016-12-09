@@ -36,6 +36,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     return(p)
   }
+  
 
   if (DS=="conker") {
 
@@ -57,7 +58,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     } else if (p$conker_local_modelengine =="gam") {
       p$conker_local_family = gaussian()
       p$conker_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
           + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
       # more than 100 knots and it takes a very long time
@@ -68,13 +69,15 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         p$conker_local_model_distanceweighted = TRUE
 
     } else if (p$conker_local_modelengine =="twostep") {
+      # 18 GB RAM for 24 CPU .. 
       p$conker_local_family = gaussian()
       p$conker_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") +s(z, k=3, bs="ts")
-          + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
+          + s(plon,k=2, bs="ts") + s(plat, k=2, bs="ts")
+          + s(plon, plat, cos.w, sin.w, yr, bs="ts") )
         # same as GAM model 
       p$conker_local_model_distanceweighted = TRUE
+      p$conker_kernelmethods_use_all_data =TRUE ## speed is the issue
     
     } else if (p$conker_local_modelengine == "bayesx") {
 
@@ -106,9 +109,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
   
-
-    p$conker_distance_scale = 50 # km ... approx guess of 95% AC range 
-    p$conker_distance_prediction = 10 # this is a half window km
+    p$conker_distance_scale = 25 # km ... approx guess of 95% AC range 
+    p$conker_distance_prediction = 7.5 # this is a half window km
     p$conker_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
 
     # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
@@ -116,10 +118,10 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
   
     p$n.min = p$ny*3 # n.min/n.max changes with resolution
     # min number of data points req before attempting to model timeseries in a localized space
-    p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
+    p$n.max = 1000 # numerical time/memory constraint -- anything larger takes too much time
 
     p$conker_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-    p$conker_theta = p$pres # FFT kernel bandwidth (SD of kernel) required for method "harmonic.1/kernel.density"
+    p$conker_theta = p$pres * 5 # FFT kernel bandwidth (SD of kernel if gaussian) required for method "harmonic.1/kernel.density, etc .."
 
     p$conker_rsquared_threshold = 0.25 # lower threshold
     p$conker_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
