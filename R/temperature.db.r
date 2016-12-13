@@ -2,11 +2,43 @@
 temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 
 
+  if ( DS %in% c("temperature.conker.finalize.redo", "temperature.conker.finalize" )) {
+    #// temperature( p, DS="temperature.conker.finalize(.redo)" return/create the
+    #//   conker interpolated method formatted and finalised for production use
+    fn = file.path(  project.datadirectory("bio.temperature"), "interpolated",
+      paste( "temperature", "conker", "finalized", p$spatial.domain, "rdata", sep=".") )
+    if (DS =="temperature.conker.finalize" ) {
+      B = NULL
+      if ( file.exists ( fn) ) load( fn)
+      return( B )
+    }
+
+    # merge into statistics
+    B = bathymetry.db( p=p, DS="complete" ) # add to the input dataS
+    B = B[ which(B$z >0), ]
+ 
+    BS = conker_db( p=p, DS="stats.to.prediction.grid" )
+    names(BS) = paste("z", names(BS), sep=".")
+    B = cbind( B, BS )
+    rm (BS); gc()
+  
+    save( B, file=fn, compress=TRUE)
+    return(fn)
+
+    if (0) {
+      aoi = which( B$z > 5 & B$z < 3000 & B$z.range < 500)
+      levelplot( log(z) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      levelplot( log(z.range) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      levelplot( Z.rangeSD ~ plon + plat, B[aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+    }
+  }
+
+
   if (DS %in% c(  "conker.prediction.mean", "conker.prediction.sd", "conker.prediction.redo", "conker.prediction" )){
 
-		# interpolated predictions over only missing data
-		savedir = file.path(p$project.root, "conker", p$spatial.domain )
-    # dir.create( savedir, recursive=T, showWarnings=F )  # created by conker
+		# NOTE: the primary interpolated data were already created by conker. This routine points to this data and also creates 
+    # subsets of the data where required, determined by "subregions" 
+		savedir = file.path(p$project.root, "conker", p$spatial.domain ) # already saved by conker_db .. this is a synonym
 
     if (DS %in% c("conker.prediction", "conker.prediction.mean")) {
       P = NULL
@@ -26,15 +58,16 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     if (exists( "libs", p)) RLibrary( p$libs )
     if ( is.null(ip) ) ip = 1:p$nruns
 
+    #downscale
     for ( r in ip ) {
-      y = p$runs[r, "yrs"]
+      yr = p$runs[r, "yrs"]
       # default domain
-      PP0 = temperature.db( p, DS="conker.prediction.mean", yr=yr)
-      VV0 = temperature.db( p, DS="conker.prediction.sd", yr=yr)
+      PP0 = temperature.db( p=p, DS="conker.prediction.mean", yr=yr)
+      VV0 = temperature.db( p=p, DS="conker.prediction.sd", yr=yr)
       p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
       p$wght = fields::setup.image.smooth( nrow=p0$nplons, ncol=p0$nplats, dx=p0$pres, dy=p0$pres,
               theta=p$theta, xwidth=p$nsd*p$theta, ywidth=p$nsd*p$theta )
-      L0 = bathymetry.db( p=p0, DS="baseline" )[, c("plon", "plat")]
+      L0 = temperature.db( p=p0, DS="baseline" )[, c("plon", "plat")]
       sreg = setdiff( p$subregions, p$spatial.domain.default ) 
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
@@ -47,8 +80,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
           }
           savedir_sg = file.path(p$project.root, "conker", p1$spatial.domain ) 
           dir.create( savedir_sg, recursive=T, showWarnings=F )
-          fn1_sg = file.path( savedir_sg, paste("conker.prediction.mean",  y, "rdata", sep=".") )
-          fn2_sg = file.path( savedir_sg, paste("conker.prediction.sd",  y, "rdata", sep=".") )
+          fn1_sg = file.path( savedir_sg, paste("conker.prediction.mean",  yr, "rdata", sep=".") )
+          fn2_sg = file.path( savedir_sg, paste("conker.prediction.sd",  yr, "rdata", sep=".") )
           save( P, file=fn1_sg, compress=T )
           save( V, file=fn2_sg, compress=T )
           print (fn1_sg)
@@ -127,8 +160,6 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     return ("Completed")
   }
 
-
-
   # -----------------
 
   if (DS %in% c("climatology", "climatology.redo") ) {
@@ -155,6 +186,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     PS = bathymetry.db( p=p, DS="baseline" )  # SS to a depth of 500 m  the default used for all planar SS grids
     PS$id = 1:nrow(PS)
     PS$z = NULL
+
+    TC = temperature.db( p=p, DS="temperature.conker.finalize")
+    PS = merge( PS, TC, by="?") # or cbind ... Not finished
 
     B = matrix( NA, nrow=nrow(PS), ncol=length(p$tyears.climatology ) )
     climatology = matrix ( NA, nrow=nrow(PS), ncol=length(p$bstats)  )

@@ -568,7 +568,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
     keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
     if (length(keep) > 0 ) B = B[ keep, ]
-    B$z = log( B$z)  # ranges  are too large in some cases to use untransformed
+    B$z = log( B$z) # ranges  are too large in some cases to use untransformed
 
     # default output grid
 
