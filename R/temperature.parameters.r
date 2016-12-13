@@ -125,7 +125,12 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$n.max = 1000 # numerical time/memory constraint -- anything larger takes too much time
 
     p$conker_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
+<<<<<<< HEAD
     p$conker_theta = p$theta # FFT kernel bandwidth (SD of kernel if gaussian) required for method "harmonic.1/kernel.density, etc .."
+=======
+    p$conker_phi = p$pres / 5 # FFT-baed methods cov range parameter
+    p$conker_nu = 0.5
+>>>>>>> develop
 
     p$conker_rsquared_threshold = 0.25 # lower threshold
     p$conker_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
