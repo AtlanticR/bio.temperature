@@ -14,7 +14,7 @@ Imports:
   bigmemory,
   lubridate,
   fields,
-  conker,
+  lstfilter,
   bio.base, 
   bio.bathymetry, 
   bio.polygons,
