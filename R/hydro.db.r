@@ -559,7 +559,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
   
   if (DS=="hivemod.input") {
 
-    B = hydro.db( p=p, DS="bottom.gridded.all"  )
+    B = hydro.db( p=p, DS="bottom.gridded.all"  ) # could simple add all data instead of the gridded ...
     B$tiyr = lubridate::decimal_date ( B$date )
 
     # globally remove all unrealistic data
@@ -568,16 +568,14 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
     keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
     if (length(keep) > 0 ) B = B[ keep, ]
-    B$z = log( B$z) # ranges  are too large in some cases to use untransformed
 
     # default output grid
-
-    Pcov = bathymetry.db( p=p, DS="complete" )
-    Pcov = Pcov[ which(Pcov$z >0), ]
-    Pcov$z = log( Pcov$z) # ranges  are too large in some cases to use untransformed 2 orders or more (e.g. 40 to 2000 m)
+    Bout = bathymetry.db( p=p, DS="complete" )
+    Bout = Bout[ which(Bout$z >0), ]
     OUT  = list( 
-        LOCS=Pcov[,c("plon","plat")],
-        COV =list(z= Pcov[,c("z")] ) )          
+      LOCS=Bout[,c("plon","plat")],
+      COV =list(z= Bout[,c("z")] ) 
+    )          
 
     return (list(input=B, output=OUT))
   }

@@ -44,7 +44,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$libs = RLibrary( c( p$libs, "hivemod" ) ) # required for parallel processing
     p$storage.backend="bigmemory.ram"
     p$boundary = TRUE 
-    p$depth.filter = log(1) # depth is given as log(depth) so, choose andy stats locations with elevation > 0.5 m as being on land
+    p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land
  
     p$hivemod_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
     p$hivemod_phi = p$pres / 5 # FFT-baed methods cov range parameter
@@ -86,7 +86,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
  
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
           + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
       # more than 100 knots and it takes a very long time
@@ -102,7 +102,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(log(z), k=3, bs="ts")
           + s(cos.w, sin.w, yr, bs="ts") )
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$hivemod_local_model_distanceweighted = TRUE
@@ -112,7 +112,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # similar to the two-step but use "spate" (spde, bayesian, mcmc) instead of "fields" (GMRF, ML)
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
           + s(cos.w, sin.w, yr, bs="ts") )
         # similar to GAM model but no spatial component , space and time are handled via FFT but time is seeded by the averge local TS signal (to avoid missing data isses in time.)
       p$hivemod_local_model_distanceweighted = TRUE
