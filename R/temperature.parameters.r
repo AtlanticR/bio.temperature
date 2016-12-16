@@ -39,23 +39,53 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
   }
   
 
-  if (DS=="lstfilter") {
+  if (DS=="hivemod") {
 
-    p$libs = RLibrary( c( p$libs, "lstfilter" ) ) # required for parallel processing
+    p$libs = RLibrary( c( p$libs, "hivemod" ) ) # required for parallel processing
     p$storage.backend="bigmemory.ram"
+    p$boundary = TRUE 
+    p$depth.filter = log(1) # depth is given as log(depth) so, choose andy stats locations with elevation > 0.5 m as being on land
  
-    if (!exists("lstfilter_local_modelengine", p)) {
-      message( "'lstfilter_local_modelengine' was not specified, using gam as default")
-      p$lstfilter_local_modelengine = "gam" # default is gam ..
-      p$lstfilter_local_modelengine = "twostep" # testing twostep ~ hybrid of gam + kernel density ..
-    }
+    p$hivemod_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
+    p$hivemod_phi = p$pres / 5 # FFT-baed methods cov range parameter
+    p$hivemod_nu = 0.5
+    p$hivemod_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
+    p$hivemod_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
+    
+    p$hivemod_rsquared_threshold = 0.25 # lower threshold
+    p$hivemod_distance_prediction = 7.5 # this is a half window km
+    p$hivemod_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+    p$hivemod_distance_scale = 25 # km ... approx guess of 95% AC range 
+    p$hivemod_distance_min = 1
+    p$hivemod_distance_max = 50 
 
+    # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
+    p$hivemod_variogram_method = "fast"
+  
+    p$n.min = 100 # n.min/n.max changes with resolution
+    # min number of data points req before attempting to model timeseries in a localized space
+    p$n.max = 1000 # numerical time/memory constraint -- anything larger takes too much time
+    p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # 
+
+
+    p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
  
-    if (p$lstfilter_local_modelengine == "gaussianprocess2Dt") {
+    # using covariates as a first pass essentially makes it kriging with external drift
+    p$hivemod_global_modelengine = NULL #"gam"
+    p$hivemod_global_modelformula = NULL # formula( t ~ s(z, bs="ts") ) # marginally useful .. consider removing it.
+    p$hivemod_global_family = gaussian()
+
+    if (!exists("hivemod_local_modelengine", p)) p$hivemod_local_modelengine = "gam" # "twostep" 
+  
+  
+    if (p$hivemod_local_modelengine == "gaussianprocess2Dt") {
+ 
       message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
-    } else if (p$lstfilter_local_modelengine =="gam") {
-      p$lstfilter_local_family = gaussian()
-      p$lstfilter_local_modelformula = formula(
+ 
+    } else if (p$hivemod_local_modelengine =="gam") {
+ 
+      p$hivemod_local_family = gaussian()
+      p$hivemod_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
           + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
@@ -64,77 +94,51 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
         #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
         #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
-        p$lstfilter_local_model_distanceweighted = TRUE
-    } else if (p$lstfilter_local_modelengine =="twostep") {
+        p$hivemod_local_model_distanceweighted = TRUE
+ 
+    } else if (p$hivemod_local_modelengine =="twostep") {
+ 
       # 18 GB RAM for 24 CPU .. 
       # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM
-      p$lstfilter_local_family = gaussian()
-      p$lstfilter_local_modelformula = formula(
+      p$hivemod_local_family = gaussian()
+      p$hivemod_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
           + s(cos.w, sin.w, yr, bs="ts") )
         # similar to GAM model but no spatial component .. space is handled via FFT
-      p$lstfilter_local_model_distanceweighted = TRUE
-    } else if (p$lstfilter_local_modelengine =="spate") {
+      p$hivemod_local_model_distanceweighted = TRUE
+ 
+    } else if (p$hivemod_local_modelengine =="spate") {
+ 
       # similar to the two-step but use "spate" (spde, bayesian, mcmc) instead of "fields" (GMRF, ML)
-      p$lstfilter_local_family = gaussian()
-      p$lstfilter_local_modelformula = formula(
+      p$hivemod_local_family = gaussian()
+      p$hivemod_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(z, k=3, bs="ts")
           + s(cos.w, sin.w, yr, bs="ts") )
         # similar to GAM model but no spatial component , space and time are handled via FFT but time is seeded by the averge local TS signal (to avoid missing data isses in time.)
-      p$lstfilter_local_model_distanceweighted = TRUE
-    } else if (p$lstfilter_local_modelengine == "bayesx") {
+      p$hivemod_local_model_distanceweighted = TRUE
+ 
+    } else if (p$hivemod_local_modelengine == "bayesx") {
+ 
       # bayesx families are specified as characters, this forces it to pass as is and 
-      # then the next does the transformation internal to the "lstfilter__bayesx"
-      p$lstfilter_local_family = gaussian() 
-      p$lstfilter_local_family_bayesx = "gaussian" 
+      # then the next does the transformation internal to the "hivemod__bayesx"
+      p$hivemod_local_family = gaussian() 
+      p$hivemod_local_family_bayesx = "gaussian" 
 
       # alternative models .. testing .. problem is that SE of fit is not accessible?
-      p$lstfilter_local_modelformula = formula(
+      p$hivemod_local_modelformula = formula(
         t ~ sx(yr,   bs="ps") + sx(cos.w, bs="ps") + s(sin.w, bs="ps") +s(z, bs="ps")
           + sx(plon, bs="ps") + sx(plat,  bs="ps")
           + sx(plon, plat, cos.w, sin.w, yr, bs="te")  # te is tensor spline
       )
-      p$lstfilter_local_model_bayesxmethod="MCMC"
-      p$lstfilter_local_model_distanceweighted = FALSE
+      p$hivemod_local_model_bayesxmethod="MCMC"
+      p$hivemod_local_model_distanceweighted = FALSE
     
     } else {
     
-      message( "The specified lstfilter_local_modelengine is not tested/supported ... you are on your own ;) ..." )
+      message( "The specified hivemod_local_modelengine is not tested/supported ... you are on your own ;) ..." )
 
     }
     
-
-    # using covariates as a first pass essentially makes it kriging with external drift
-    p$lstfilter_global_modelengine = NULL #"gam"
-    p$lstfilter_global_modelformula = NULL # formula( t ~ s(z, bs="ts") ) # marginally useful .. consider removing it.
-    p$lstfilter_global_family = gaussian()
-
-    p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
-  
-    p$lstfilter_distance_scale = 25 # km ... approx guess of 95% AC range 
-    p$lstfilter_distance_prediction = 7.5 # this is a half window km
-    p$lstfilter_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-    p$lstfilter_distance_min = 1
-    p$lstfilter_distance_max = 100 
-
-    # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
-    p$lstfilter_variogram_method = "fast"
-  
-    p$n.min = 200 # n.min/n.max changes with resolution
-    # min number of data points req before attempting to model timeseries in a localized space
-    p$n.max = 1000 # numerical time/memory constraint -- anything larger takes too much time
-
-    p$lstfilter_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-
-    p$lstfilter_phi = p$pres / 5 # FFT-baed methods cov range parameter
-    p$lstfilter_nu = 0.5
-
-    p$lstfilter_rsquared_threshold = 0.25 # lower threshold
-    p$lstfilter_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
-    p$lstfilter_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
-
-    p$boundary = TRUE 
-    p$depth.filter = log(0.5) # depth is given as log(depth) so, choose andy stats locations with elevation > 0.5 m as being on land
 
     return(p)
   }

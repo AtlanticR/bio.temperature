@@ -557,7 +557,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
   # -----------------
   
-  if (DS=="lstfilter.input") {
+  if (DS=="hivemod.input") {
 
     B = hydro.db( p=p, DS="bottom.gridded.all"  )
     B$tiyr = lubridate::decimal_date ( B$date )

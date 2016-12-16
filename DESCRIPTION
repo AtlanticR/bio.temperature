@@ -14,7 +14,7 @@ Imports:
   bigmemory,
   lubridate,
   fields,
-  lstfilter,
+  hivemod,
   bio.base, 
   bio.bathymetry, 
   bio.polygons,

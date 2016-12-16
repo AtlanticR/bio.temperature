@@ -2,12 +2,12 @@
 temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 
 
-  if ( DS %in% c("temperature.lstfilter.finalize.redo", "temperature.lstfilter.finalize" )) {
-    #// temperature( p, DS="temperature.lstfilter.finalize(.redo)" return/create the
-    #//   lstfilter interpolated method formatted and finalised for production use
+  if ( DS %in% c("temperature.hivemod.finalize.redo", "temperature.hivemod.finalize" )) {
+    #// temperature( p, DS="temperature.hivemod.finalize(.redo)" return/create the
+    #//   hivemod interpolated method formatted and finalised for production use
     fn = file.path(  project.datadirectory("bio.temperature"), "interpolated",
-      paste( "temperature", "lstfilter", "finalized", p$spatial.domain, "rdata", sep=".") )
-    if (DS =="temperature.lstfilter.finalize" ) {
+      paste( "temperature", "hivemod", "finalized", p$spatial.domain, "rdata", sep=".") )
+    if (DS =="temperature.hivemod.finalize" ) {
       B = NULL
       if ( file.exists ( fn) ) load( fn)
       return( B )
@@ -17,7 +17,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     B = bathymetry.db( p=p, DS="complete" ) # add to the input dataS
     B = B[ which(B$z >0), ]
  
-    BS = lstfilter_db( p=p, DS="stats.to.prediction.grid" )
+    BS = hivemod_db( p=p, DS="stats.to.prediction.grid" )
     names(BS) = paste("z", names(BS), sep=".")
     B = cbind( B, BS )
     rm (BS); gc()
@@ -34,22 +34,22 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
   }
 
 
-  if (DS %in% c(  "lstfilter.prediction.mean", "lstfilter.prediction.sd", "lstfilter.prediction.redo", "lstfilter.prediction" )){
+  if (DS %in% c(  "hivemod.prediction.mean", "hivemod.prediction.sd", "hivemod.prediction.redo", "hivemod.prediction" )){
 
-		# NOTE: the primary interpolated data were already created by lstfilter. This routine points to this data and also creates 
+		# NOTE: the primary interpolated data were already created by hivemod. This routine points to this data and also creates 
     # subsets of the data where required, determined by "subregions" 
-		savedir = file.path(p$project.root, "lstfilter", p$spatial.domain ) # already saved by lstfilter_db .. this is a synonym
+		savedir = file.path(p$project.root, "hivemod", p$spatial.domain ) # already saved by hivemod_db .. this is a synonym
 
-    if (DS %in% c("lstfilter.prediction", "lstfilter.prediction.mean")) {
+    if (DS %in% c("hivemod.prediction", "hivemod.prediction.mean")) {
       P = NULL
-      fn1 = file.path( savedir, paste("lstfilter.prediction.mean",  yr, "rdata", sep=".") )
+      fn1 = file.path( savedir, paste("hivemod.prediction.mean",  yr, "rdata", sep=".") )
       if (file.exists( fn1) ) load(fn1)
       return ( P )
     }
 
-    if (DS %in% c("lstfilter.prediction.sd")) {
+    if (DS %in% c("hivemod.prediction.sd")) {
       V = NULL
-      fn2 = file.path( savedir, paste("lstfilter.prediction.sd",  yr, "rdata", sep=".") )
+      fn2 = file.path( savedir, paste("hivemod.prediction.sd",  yr, "rdata", sep=".") )
       V =NULL
       if (file.exists( fn2) ) load(fn2)
       return ( V )
@@ -62,8 +62,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     for ( r in ip ) {
       yr = p$runs[r, "yrs"]
       # default domain
-      PP0 = temperature.db( p=p, DS="lstfilter.prediction.mean", yr=yr)
-      VV0 = temperature.db( p=p, DS="lstfilter.prediction.sd", yr=yr)
+      PP0 = temperature.db( p=p, DS="hivemod.prediction.mean", yr=yr)
+      VV0 = temperature.db( p=p, DS="hivemod.prediction.sd", yr=yr)
       p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
       p$wght = fields::setup.image.smooth( nrow=p0$nplons, ncol=p0$nplats, dx=p0$pres, dy=p0$pres,
               theta=p$phi, xwidth=p$nsd*p$phi, ywidth=p$nsd*p$phi )
@@ -78,10 +78,10 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
             P[,iw] = spatial_warp ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
             V[,iw] = spatial_warp ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
           }
-          savedir_sg = file.path(p$project.root, "lstfilter", p1$spatial.domain ) 
+          savedir_sg = file.path(p$project.root, "hivemod", p1$spatial.domain ) 
           dir.create( savedir_sg, recursive=T, showWarnings=F )
-          fn1_sg = file.path( savedir_sg, paste("lstfilter.prediction.mean",  yr, "rdata", sep=".") )
-          fn2_sg = file.path( savedir_sg, paste("lstfilter.prediction.sd",  yr, "rdata", sep=".") )
+          fn1_sg = file.path( savedir_sg, paste("hivemod.prediction.mean",  yr, "rdata", sep=".") )
+          fn2_sg = file.path( savedir_sg, paste("hivemod.prediction.sd",  yr, "rdata", sep=".") )
           save( P, file=fn1_sg, compress=T )
           save( V, file=fn2_sg, compress=T )
           print (fn1_sg)
@@ -113,13 +113,13 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 			print ( paste("Year:", y)  )
 
 			O = bathymetry.db( p=p, DS="baseline" )
-      P = temperature.db( p=p, DS="lstfilter.prediction.mean", yr=y  )
+      P = temperature.db( p=p, DS="hivemod.prediction.mean", yr=y  )
    		P[ P < -2 ] = -2
 		  P[ P > 30 ] = 30
 		  ibaddata = which( !is.finite(P) )
 			P[ ibaddata ] = mean(P, na.rm=T )
 
-			V = temperature.db( p=p, DS="lstfilter.prediction.sd", yr=y  )
+			V = temperature.db( p=p, DS="hivemod.prediction.sd", yr=y  )
 			V[ V < 0.1 ] = 100  # shrink weighting of unreasonably small SEs
 		  V[ which( !is.finite(V)) ] = 1000 # "
 			V[ ibaddata ] = 10000 # " smaller still
@@ -187,7 +187,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     PS$id = 1:nrow(PS)
     PS$z = NULL
 
-    TC = temperature.db( p=p, DS="temperature.lstfilter.finalize")
+    TC = temperature.db( p=p, DS="temperature.hivemod.finalize")
     PS = merge( PS, TC, by="?") # or cbind ... Not finished
 
     B = matrix( NA, nrow=nrow(PS), ncol=length(p$tyears.climatology ) )
