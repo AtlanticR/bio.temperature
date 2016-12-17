@@ -53,7 +53,7 @@
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
-    DATA='hydro.db( p=p, DS="hivemod.input" )'
+    DATA='hydro.db( p=p, DS="temperature.hivemod" )'
     p = hivemod( p=p, DATA=DATA )
 
     # 3. simple spatial interpolation .. collect data from hivemod and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"

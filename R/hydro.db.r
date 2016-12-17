@@ -557,9 +557,9 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
   # -----------------
   
-  if (DS=="hivemod.input") {
+  if (DS=="temperature.hivemod") {
 
-    B = hydro.db( p=p, DS="bottom.gridded.all"  ) # could simple add all data instead of the gridded ...
+    B = hydro.db( p=p, DS="bottom.gridded.all"  ) # might be better add all data instead of the gridded ... gridding is just to make things faster
     B$tiyr = lubridate::decimal_date ( B$date )
 
     # globally remove all unrealistic data

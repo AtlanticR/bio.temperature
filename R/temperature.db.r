@@ -14,7 +14,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     }
 
     # merge into statistics
-    B = bathymetry.db( p=p, DS="complete" ) # add to the input dataS
+    B = bathymetry.db( p=p, DS="complete" ) # add to the input data
     B = B[ which(B$z >0), ]
  
     BS = hivemod_db( p=p, DS="stats.to.prediction.grid" )
