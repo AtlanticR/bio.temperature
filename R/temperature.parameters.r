@@ -47,8 +47,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land
  
     p$hivemod_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-    p$hivemod_phi = p$pres / 5 # FFT-baed methods cov range parameter
-    p$hivemod_nu = 0.5
+    p$hivemod_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter
+    p$hivemod_lowpass_nu = 0.5
     p$hivemod_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
     p$hivemod_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
     
@@ -83,7 +83,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
  
     } else if (p$hivemod_local_modelengine =="gam") {
- 
+      # 32 hours on nyx all cpus
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
@@ -97,9 +97,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         p$hivemod_local_model_distanceweighted = TRUE
  
     } else if (p$hivemod_local_modelengine =="twostep") {
- 
+      # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM .. about 1/3 faster than 24 cpus systems
+      # 42 hrs on tartarus all cpus 
       # 18 GB RAM for 24 CPU .. 
-      # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(log(z), k=3, bs="ts")

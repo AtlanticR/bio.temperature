@@ -18,7 +18,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     B = B[ which(B$z >0), ]
  
     BS = hivemod_db( p=p, DS="stats.to.prediction.grid" )
-    names(BS) = paste("z", names(BS), sep=".")
+    colnames(BS) = paste("t", colnames(BS), sep=".")
     B = cbind( B, BS )
     rm (BS); gc()
   
@@ -28,7 +28,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     if (0) {
       aoi = which( B$z > 5 & B$z < 3000 & B$z.range < 500)
       levelplot( log(z) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
-      levelplot( log(z.range) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      levelplot( log(t.ar_1) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      
+      levelplot( log(t.range) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
       levelplot( Z.rangeSD ~ plon + plat, B[aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
     }
   }
