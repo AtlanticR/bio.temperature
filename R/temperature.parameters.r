@@ -62,7 +62,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     # other options might work depending upon data density but GP are esp slow .. too slow for bathymetry .. here?
     p$hivemod_variogram_method = "fast"
   
-    p$n.min = 150 # n.min/n.max changes with resolution must be more than the number of knots/edf
+    p$n.min = 200 # n.min/n.max changes with resolution must be more than the number of knots/edf
     # min number of data points req before attempting to model timeseries in a localized space
     p$n.max = 1000 # numerical time/memory constraint -- anything larger takes too much time
     p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # 
