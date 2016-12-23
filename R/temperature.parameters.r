@@ -106,7 +106,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
           + s(cos.w, sin.w, yr, bs="ts") )
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$hivemod_local_model_distanceweighted = TRUE
-      p$hivemod_fft_filter == "spatial.process"
+      p$hivemod_fft_filter = "spatial.process"
 
     } else if (p$hivemod_local_modelengine =="spate") {
  
