@@ -70,7 +70,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
  
-    # using covariates as a first pass essentially makes it kriging with external drift
+    # using covariates as a first pass essentially makes it ~ kriging with external drift
     p$hivemod_global_modelengine = NULL #"gam"
     p$hivemod_global_modelformula = NULL # formula( t ~ s(z, bs="ts") ) # marginally useful .. consider removing it.
     p$hivemod_global_family = gaussian()
@@ -83,27 +83,30 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
  
     } else if (p$hivemod_local_modelengine =="gam") {
-      # 32 hours on nyx all cpus
+      # 32 hours on nyx all cpus; 
+      # XX hrs on thoth all cpus
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s( log(z), k=3, bs="ts")
           + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
-      # more than 100 knots and it takes a very long time
+      # more than 100 knots and it takes a very long time, 50 seems sufficient, given the large-scaled pattern outside of the prediction box
       # other possibilities:
         #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
         #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
         #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
         p$hivemod_local_model_distanceweighted = TRUE
- 
+        p$hivemod_gam_optimizer="perf"
+        # p$hivemod_gam_optimizer=c("outer", "bfgs") 
+
     } else if (p$hivemod_local_modelengine =="twostep") {
       # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM .. about 1/3 faster than 24 cpus systems
       # 42 hrs on tartarus all cpus 
       # 18 GB RAM for 24 CPU .. 
       p$hivemod_local_family = gaussian()
       p$hivemod_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s(log(z), k=3, bs="ts")
-          + s(cos.w, sin.w, yr, bs="ts") )
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s(log(z), k=3, bs="ts")
+          + s(cos.w, sin.w, yr, bs="ts", k=9) )
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$hivemod_local_model_distanceweighted = TRUE
       p$hivemod_fft_filter = "spatial.process"
