@@ -17,7 +17,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     if ( !exists("subregions", p) )  p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
 
     p$newyear = current.year
-    p$tyears =tres c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
+    p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
 
     if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
     
