@@ -3,7 +3,10 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  p = bio.temperature::temperature.parameters( current.year=2016 )
+  current.year=2016
+
+
+  p = bio.temperature::temperature.parameters( current.year=current.year )
 
   # ------------------------------
 
@@ -35,12 +38,9 @@
   # Basic data uptake now complete  .. move to interpolations
   # ------------------------------
 
-  if (create.interpolated.results.hivemod ) {
-
-    p$hivemod_local_modelengine="spate"
-    p$nclusters_pred = 4  # for generating prediction surface
+  if (create.interpolated.results.lbm ) {
     
-    p = bio.temperature::temperature.parameters( DS="hivemod", p=p )
+    p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     
     # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
@@ -48,30 +48,31 @@
     hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
     hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
 
-    # 2. hivemod interpolations assuming some seasonal pattern
+    # 2. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
-    DATA='hydro.db( p=p, DS="temperature.hivemod" )'
-    p = hivemod( p=p, DATA=DATA )
+    DATA='hydro.db( p=p, DS="temperature.lbm" )'
+    p = lbm( p=p, DATA=DATA )
 
-    # 3. simple spatial interpolation .. collect data from hivemod and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
+    # 3. simple spatial interpolation .. collect data from lbm and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
     # ... it is required for the habitat lookup .. no way around it
     # (complex/kriging takes too much time/cpu) ==> 3-4 hr/run
     # using localhost in 2014 6+ hr for each run but with multiple cycles ~ 10 hr total
     # use all clusters if available
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="hivemod.prediction.redo" )
-    #  temperature.db( p=p, DS="hivemod.prediction.redo" ) # 2hr in serial mode
+    parallel.run( temperature.db, p=p, DS="lbm.prediction.redo" )
+    #  temperature.db( p=p, DS="lbm.prediction.redo" ) # 2hr in serial mode
 
 
     # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
     # temperature.db(  p=p, DS="bottom.statistics.annual.redo" )
     # or parallel runs: ~ 1 to 2 GB / process
     # 4 cpu's ~ 10 min
-    p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
+    p$clusters = rep("localhost", detectCores() )
+    # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
     p = make.list( list( yrs=p$tyears), Y=p )
     parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
     #  temperature.db( p=p, DS="bottom.statistics.annual.redo" )
