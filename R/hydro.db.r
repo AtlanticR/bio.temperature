@@ -1,5 +1,5 @@
 
-hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC"), ...) {
+hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC"), ...) {
 
   # manipulate temperature databases from osd, groundfish and snow crab and grid them
   # OSD data source is
@@ -553,31 +553,6 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
       }
     }
     return ( "Completed rebuild"  )
-  }
-
-  # -----------------
-  
-  if (DS=="temperature.lbm") {
-
-    B = hydro.db( p=p, DS="bottom.gridded.all"  ) # might be better add all data instead of the gridded ... gridding is just to make things faster
-    B$tiyr = lubridate::decimal_date ( B$date )
-
-    # globally remove all unrealistic data
-    keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
-    if (length(keep) > 0 ) B = B[ keep, ]
-    TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
-    keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
-    if (length(keep) > 0 ) B = B[ keep, ]
-
-    # default output grid
-    Bout = bathymetry.db( p=p, DS="complete" )
-    Bout = Bout[ which(Bout$z >0), ]
-    OUT  = list( 
-      LOCS=Bout[,c("plon","plat")],
-      COV =list(z= Bout[,c("z")] ) 
-    )          
-
-    return (list(input=B, output=OUT))
   }
 
 }

@@ -67,7 +67,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
-    
+    p$varnames = c( p$variables$LOCS, p$variables$COV ) # to extract for prediction
+
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
     if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
 

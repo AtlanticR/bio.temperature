@@ -1,22 +1,47 @@
 
-temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL, dyear=NULL ) {
+temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, dyear=NULL ) {
+
+  
+  if (DS=="lbm.inputs") {
+
+    B = hydro.db( p=p, DS="bottom.gridded.all"  ) # might be better add all data instead of the gridded ... gridding is just to make things faster
+    B$tiyr = lubridate::decimal_date ( B$date )
+
+    # globally remove all unrealistic data
+    keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
+    if (length(keep) > 0 ) B = B[ keep, ]
+    TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
+    keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
+    if (length(keep) > 0 ) B = B[ keep, ]
+    
+    # default output grid
+    Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
+    Bout = Bout[ which(Bout$z >0), ]
+    OUT  = list( 
+      LOCS=Bout[,c("plon","plat")],
+      COV =list(z= Bout[,c("z")] ) 
+    )          
+
+    return (list(input=B, output=OUT))
+  }
+
+  # -----------------
 
 
-  if ( DS %in% c("temperature.lbm.finalize.redo", "temperature.lbm.finalize" )) {
-    #// temperature( p, DS="temperature.lbm.finalize(.redo)" return/create the
+  if ( DS %in% c("lbm.finalize.redo", "lbm.finalize" )) {
+    #// temperature( p, DS="lbm.finalize(.redo)" return/create the
     #//   lbm interpolated method formatted and finalised for production use
     fn = file.path(  project.datadirectory("bio.temperature"), "interpolated",
       paste( "temperature", "lbm", "finalized", p$spatial.domain, "rdata", sep=".") )
-    if (DS =="temperature.lbm.finalize" ) {
+    if (DS =="lbm.finalize" ) {
       B = NULL
       if ( file.exists ( fn) ) load( fn)
       return( B )
     }
 
     # merge into statistics
-    B = bathymetry.db( p=p, DS="complete" ) # add to the input data
-    B = B[ which(B$z >0), ]
- 
+    B = bathymetry.db( p=p, DS="baseline" ) # add to the input data
+
     BS = lbm_db( p=p, DS="stats.to.prediction.grid" )
     colnames(BS) = paste("t", colnames(BS), sep=".")
     B = cbind( B, BS )
@@ -69,11 +94,11 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL, dyea
       p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
       p$wght = fields::setup.image.smooth( nrow=p0$nplons, ncol=p0$nplats, dx=p0$pres, dy=p0$pres,
               theta=p$phi, xwidth=p$nsd*p$phi, ywidth=p$nsd*p$phi )
-      L0 = temperature.db( p=p0, DS="baseline" )[, c("plon", "plat")]
+      L0 = bathymetry.db( p=p0, DS="baseline" )
       sreg = setdiff( p$subregions, p$spatial.domain.default ) 
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
-          L1 = bathymetry.db( p=p1, DS="baseline" )[, c("plon", "plat")]
+          L1 = bathymetry.db( p=p1, DS="baseline" )
           P = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
           V = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
           for (iw in 1:p$nw) {
@@ -187,9 +212,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL, dyea
 
     PS = bathymetry.db( p=p, DS="baseline" )  # SS to a depth of 500 m  the default used for all planar SS grids
     PS$id = 1:nrow(PS)
-    PS$z = NULL
-
-    TC = temperature.db( p=p, DS="temperature.lbm.finalize")
+ 
+    TC = temperature.db( p=p, DS="lbm.finalize")
     PS = merge( PS, TC, by="?") # or cbind ... Not finished
 
     B = matrix( NA, nrow=nrow(PS), ncol=length(p$tyears.climatology ) )
@@ -234,9 +258,18 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL, dyea
       }
       return (PS)
     }
+  
+    B0 = bathymetry.db( p=p, DS="baseline" ) 
+    id = which.min( abs( dyear - p$dyear_centre))
+    PS = matrix( NA, ncol=p$ny, nrow=nrow(B0) )
+    for (iy 1:p$ny){
+      u = NULL
+      u = temperature.db(p=p, DS="lbm.prediction.mean", yr=p$tyears[iy] )
+      if (!is.null(u)) PS[,iy] = u
+    }
 
-
-
+    save( PS, file=outfile, compress=TRUE )
+    return(outfile)
   }
 
   # ----------------------------

@@ -53,8 +53,8 @@
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
-    DATA='hydro.db( p=p, DS="temperature.lbm" )'
-    p = lbm( p=p, DATA=DATA )
+    
+    p = lbm( p=p, DATA='temperature.db( p=p, DS="temperature.lbm" )' )
 
     # 3. simple spatial interpolation .. collect data from lbm and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
     # ... it is required for the habitat lookup .. no way around it
@@ -96,16 +96,11 @@
     for ( gr in p$subregions ) {
       print (gr)
       p = spatial_parameters(  p=p, type= gr )
-      if ( length(p$clusters) > 1 ) {
-        parallel.run( temperature.db, p=p, DS="complete.redo")
-        parallel.run( hydro.map, p=p, type="annual"  )
-        parallel.run( hydro.map, p=p, type="global")
-      } else {
-        temperature.db( p=p, DS="complete.redo")
-        hydro.map( p=p, type="annual" )
-        hydro.map( p=p, type="global" )
-      }
+      parallel.run( temperature.db, p=p, DS="complete.redo")
+      parallel.run( hydro.map, p=p, type="annual"  )
+      parallel.run( hydro.map, p=p, type="global")
     }
+    
 
   # finished 
 
