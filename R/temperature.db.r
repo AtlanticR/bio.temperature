@@ -262,7 +262,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     B0 = bathymetry.db( p=p, DS="baseline" ) 
     id = which.min( abs( dyear - p$dyear_centre))
     PS = matrix( NA, ncol=p$ny, nrow=nrow(B0) )
-    for (iy 1:p$ny){
+    for (iy in 1:p$ny){
       u = NULL
       u = temperature.db(p=p, DS="lbm.prediction.mean", yr=p$tyears[iy] )
       if (!is.null(u)) PS[,iy] = u
