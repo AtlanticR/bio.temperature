@@ -99,6 +99,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         p$lbm_local_model_distanceweighted = TRUE
         p$lbm_gam_optimizer="perf"
         # p$lbm_gam_optimizer=c("outer", "bfgs") 
+        
     } else if (p$lbm_local_modelengine =="fft") {
 
       # p$lbm_fft_filter = "lowpass" # only act as a low pass filter .. depth has enough data for this. Otherwise, use: 
