@@ -85,7 +85,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     if (exists( "libs", p)) RLibrary( p$libs )
     if ( is.null(ip) ) ip = 1:p$nruns
 
-    #downscale and warp
+    #downscale and warp from p(0) -> p1
     for ( r in ip ) {
       yr = p$runs[r, "yrs"]
       # default domain
@@ -93,7 +93,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       VV0 = temperature.db( p=p, DS="lbm.prediction.sd", yr=yr)
       p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
       L0 = bathymetry.db( p=p0, DS="baseline" )
-
+      L0i = as.matrix( round( cbind( 
+          ( L0$plon-p0$plons[1])/p0$pres + 1, (L0$plat-p0$plats[1])/p0$pres + 1 ) ) ) 
+       
       sreg = setdiff( p$subregions, p$spatial.domain.default ) 
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
@@ -112,26 +114,26 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
         for (iw in 1:p$nw) {
           
           L0_mat = matrix(NA, nrow=p0$nplons, ncol=p0$nplats )
-          L0_mat[Z0i] = PP0[,iw]
+          L0_mat[L0i] = PP0[,iw]
           L1_interp = fields::interp.surface( list(x=p0$plons, y=p0$plats, z=L0_mat), loc=L1[, c("plon", "plat")] ) #linear interpolation
           ii = which( !is.finite( L1_interp ) )
           if ( length( ii) > 0 ) {
-            L1_m = matrix(NA, nrow=p1$nplons, ncol=p1$nplats )
-            L1_m[L1i] = L1_interp
-            L1_sm = fields::image.smooth( L1_m, dx=p1$pres, dy=p1$pres, wght=p1_wgts )
+            L1_mat = matrix(NA, nrow=p1$nplons, ncol=p1$nplats )
+            L1_mat[L1i] = L1_interp
+            L1_sm = fields::image.smooth( L1_mat, dx=p1$pres, dy=p1$pres, wght=p1_wgts )
             L1_sm_interp = fields::interp.surface( list(x=p1$plons, y=p1$plats, z=L1_sm$z), loc=L1[, c("plon_1", "plat_1")] ) #linear interpolation from smoothed surface
             L1_interp[ii] = L1_sm_interp[ii]
           }
           P[,iw] = L1_interp       
           
           L0_mat = matrix(NA, nrow=p0$nplons, ncol=p0$nplats )
-          L0_mat[Z0i] = VV0[,iw]
+          L0_mat[L0i] = VV0[,iw]
           L1_interp = fields::interp.surface( list(x=p0$plons, y=p0$plats, z=L0_mat), loc=L1[, c("plon", "plat")] ) #linear interpolation
           ii = which( !is.finite( L1_interp ) )
           if ( length( ii) > 0 ) {
-            L1_m = matrix(NA, nrow=p1$nplons, ncol=p1$nplats )
-            L1_m[L1i] = L1_interp
-            L1_sm = fields::image.smooth( L1_m, dx=p1$pres, dy=p1$pres, wght=p1_wgts )
+            L1_mat = matrix(NA, nrow=p1$nplons, ncol=p1$nplats )
+            L1_mat[L1i] = L1_interp
+            L1_sm = fields::image.smooth( L1_mat, dx=p1$pres, dy=p1$pres, wght=p1_wgts )
             L1_sm_interp = fields::interp.surface( list(x=p1$plons, y=p1$plats, z=L1_sm$z), loc=L1[, c("plon_1", "plat_1")] ) #linear interpolation
             L1_interp[ii] = L1_sm_interp[ii]
           }
