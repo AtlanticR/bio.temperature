@@ -85,33 +85,67 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     if (exists( "libs", p)) RLibrary( p$libs )
     if ( is.null(ip) ) ip = 1:p$nruns
 
-    #downscale
+    #downscale and warp
     for ( r in ip ) {
       yr = p$runs[r, "yrs"]
       # default domain
       PP0 = temperature.db( p=p, DS="lbm.prediction.mean", yr=yr)
       VV0 = temperature.db( p=p, DS="lbm.prediction.sd", yr=yr)
       p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
-      p$wght = fields::setup.image.smooth( nrow=p0$nplons, ncol=p0$nplats, dx=p0$pres, dy=p0$pres,
-              theta=p$phi, xwidth=p$nsd*p$phi, ywidth=p$nsd*p$phi )
       L0 = bathymetry.db( p=p0, DS="baseline" )
+
       sreg = setdiff( p$subregions, p$spatial.domain.default ) 
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
-          L1 = bathymetry.db( p=p1, DS="baseline" )
-          P = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
-          V = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
-          for (iw in 1:p$nw) {
-            P[,iw] = spatial_warp ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
-            V[,iw] = spatial_warp ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
+        L1 = bathymetry.db( p=p1, DS="baseline" )
+        L1i = as.matrix( round( cbind( 
+          ( L1$plon-p1$plons[1])/p1$pres + 1, (L1$plat-p1$plats[1])/p1$pres + 1 ) ) ) 
+        L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
+        L1$plon_1 = L1$plon # store original coords
+        L1$plat_1 = L1$plat
+        L1 = lonlat2planar( L1, proj.type=p0$internal.crs )
+        p1_wgts = fields::setup.image.smooth( nrow=p1$nplons, ncol=p1$nplats, dx=p1$pres, dy=p1$pres,
+          theta=p1$pres, xwidth=4*p1$pres, ywidth=4*p1$pres )
+
+        P = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
+        V = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
+        for (iw in 1:p$nw) {
+          
+          L0_mat = matrix(NA, nrow=p0$nplons, ncol=p0$nplats )
+          L0_mat[Z0i] = PP0[,iw]
+          L1_interp = fields::interp.surface( list(x=p0$plons, y=p0$plats, z=L0_mat), loc=L1[, c("plon", "plat")] ) #linear interpolation
+          ii = which( !is.finite( L1_interp ) )
+          if ( length( ii) > 0 ) {
+            L1_m = matrix(NA, nrow=p1$nplons, ncol=p1$nplats )
+            L1_m[L1i] = L1_interp
+            L1_sm = fields::image.smooth( L1_m, dx=p1$pres, dy=p1$pres, wght=p1_wgts )
+            L1_sm_interp = fields::interp.surface( list(x=p1$plons, y=p1$plats, z=L1_sm$z), loc=L1[, c("plon_1", "plat_1")] ) #linear interpolation from smoothed surface
+            L1_interp[ii] = L1_sm_interp[ii]
           }
-          savedir_sg = file.path(p$project.root, "lbm", p1$spatial.domain ) 
-          dir.create( savedir_sg, recursive=T, showWarnings=F )
-          fn1_sg = file.path( savedir_sg, paste("lbm.prediction.mean",  yr, "rdata", sep=".") )
-          fn2_sg = file.path( savedir_sg, paste("lbm.prediction.sd",  yr, "rdata", sep=".") )
-          save( P, file=fn1_sg, compress=T )
-          save( V, file=fn2_sg, compress=T )
-          print (fn1_sg)
+          P[,iw] = L1_interp       
+          
+          L0_mat = matrix(NA, nrow=p0$nplons, ncol=p0$nplats )
+          L0_mat[Z0i] = VV0[,iw]
+          L1_interp = fields::interp.surface( list(x=p0$plons, y=p0$plats, z=L0_mat), loc=L1[, c("plon", "plat")] ) #linear interpolation
+          ii = which( !is.finite( L1_interp ) )
+          if ( length( ii) > 0 ) {
+            L1_m = matrix(NA, nrow=p1$nplons, ncol=p1$nplats )
+            L1_m[L1i] = L1_interp
+            L1_sm = fields::image.smooth( L1_m, dx=p1$pres, dy=p1$pres, wght=p1_wgts )
+            L1_sm_interp = fields::interp.surface( list(x=p1$plons, y=p1$plats, z=L1_sm$z), loc=L1[, c("plon_1", "plat_1")] ) #linear interpolation
+            L1_interp[ii] = L1_sm_interp[ii]
+          }
+          V[,iw] = L1_interp
+
+        }
+
+        savedir_sg = file.path(p$project.root, "lbm", p1$spatial.domain ) 
+        dir.create( savedir_sg, recursive=T, showWarnings=F )
+        fn1_sg = file.path( savedir_sg, paste("lbm.prediction.mean",  yr, "rdata", sep=".") )
+        fn2_sg = file.path( savedir_sg, paste("lbm.prediction.sd",  yr, "rdata", sep=".") )
+        save( P, file=fn1_sg, compress=T )
+        save( V, file=fn2_sg, compress=T )
+        print (fn1_sg)
       }
     } 
     return ("Completed")
