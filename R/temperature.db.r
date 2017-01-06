@@ -1,6 +1,5 @@
 
 temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, dyear=NULL ) {
-
   
   if (DS=="lbm.inputs") {
 
@@ -16,10 +15,11 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     
     # default output grid
     Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
-    Bout = Bout[ which(Bout$z >0), ]
+    coords = p$variables$LOCS
+    covars = setdiff( p$varname, p$variables$LOCS )
     OUT  = list( 
-      LOCS=Bout[,c("plon","plat")],
-      COV =list(z= Bout[,c("z")] ) 
+      LOCS = Bout[,coords],
+      COV = as.list( Bout[,covars] ) 
     )          
 
     return (list(input=B, output=OUT))
@@ -31,7 +31,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
   if ( DS %in% c("lbm.finalize.redo", "lbm.finalize" )) {
     #// temperature( p, DS="lbm.finalize(.redo)" return/create the
     #//   lbm interpolated method formatted and finalised for production use
-    fn = file.path(  project.datadirectory("bio.temperature"), "interpolated",
+    fn = file.path(  project.datadirectory("bio.temperature"), "lbm",
       paste( "temperature", "lbm", "finalized", p$spatial.domain, "rdata", sep=".") )
     if (DS =="lbm.finalize" ) {
       B = NULL

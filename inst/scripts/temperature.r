@@ -54,9 +54,10 @@
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
     
-    DATA='temperature.db( p=p, DS="temperature.lbm" )' 
-    p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) £ no global model
+    DATA='temperature.db( p=p, DS="lbm.inputs" )' 
+    p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model
     p = lbm( p=p, tasks=c( "stage1", "stage2", "stage3" ) )
+    p = lbm( p=p, tasks=c( "save" ) )
 
     # 3. simple spatial interpolation .. collect data from lbm and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
     # ... it is required for the habitat lookup .. no way around it
