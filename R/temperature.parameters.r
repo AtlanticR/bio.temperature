@@ -11,8 +11,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     if ( !exists("project.name", p) ) p$project.name="bio.temperature"
     if ( !exists("project.root", p) ) p$project.root = project.datadirectory( p$project.name )
 
-    if ( !exists("spatial.domain.default", p) ) p$spatial.domain.default = "canada.east"
-    p = spatial_parameters( p=p, type=p$spatial.domain.default )  # default grid and resolution
+    if ( !exists("spatial.domain", p) ) p$spatial.domain = "canada.east"
+    p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
     
     if ( !exists("subregions", p) )  p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
 
@@ -35,6 +35,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$dyear_centre = p$dyears[ round(p$nw/2) ] + p$tres/2
 
     p$spatial_distance_max = 25 # obsolete .. used by old inverse distance method .. to be retired shortly
+
+    p$prediction.dyear = 0.75 # used for creating timeslices .. needs to match the values in indicators.parameters()
 
     return(p)
   }

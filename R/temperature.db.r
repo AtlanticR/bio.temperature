@@ -28,44 +28,43 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
   # -----------------
 
 
-  if ( DS %in% c("lbm.finalize.redo", "lbm.finalize" )) {
+  if ( DS %in% c("lbm.finalize.redo", "lbm.finalize.static", "lbm.finalize.dynamic",
+   "lbm.prediction.mean", "lbm.prediction.sd", "lbm.prediction.redo", "lbm.prediction" )) {
     #// temperature( p, DS="lbm.finalize(.redo)" return/create the
     #//   lbm interpolated method formatted and finalised for production use
-    fn = file.path(  project.datadirectory("bio.temperature"), "lbm",
-      paste( "temperature", "lbm", "finalized", p$spatial.domain, "rdata", sep=".") )
-    if (DS =="lbm.finalize" ) {
-      B = NULL
-      if ( file.exists ( fn) ) load( fn)
-      return( B )
+    
+    outdir = file.path(project.datadirectory("bio.temperature"), "lbm")
+
+    # NOTE: the primary interpolated data were already created by lbm. This routine points to this data and also creates 
+    # subsets of the data where required, determined by "subregions" 
+    outdirts = file.path(outdir, p$spatial.domain ) # already saved by lbm_db .. this is a synonym
+
+    fns = file.path( outdir,
+      paste( "temperature", "lbm", "finalized", "static", p$spatial.domain, "rdata", sep=".") )
+    
+    fnd = file.path( outdir,
+      paste( "temperature", "lbm", "finalized", "dynamic", p$spatial.domain, "rdata", sep=".") )
+    
+    if (DS =="lbm.finalize.static" ) {
+      PS = NULL
+      if ( file.exists ( fns) ) load( fns)
+      return( PS )
+    }
+
+    if (DS =="lbm.finalize.dynamic" ) {
+      PD = NULL
+      if ( file.exists ( fnd) ) load( fnd)
+      return( PD )
     }
 
     # merge into statistics
-    B = bathymetry.db( p=p, DS="baseline" ) # add to the input data
-
+    PS = bathymetry.db( p=p, DS="baseline" )  
     BS = lbm_db( p=p, DS="stats.to.prediction.grid" )
     colnames(BS) = paste("t", colnames(BS), sep=".")
-    B = cbind( B, BS )
-    rm (BS); gc()
-  
-    save( B, file=fn, compress=TRUE)
-    return(fn)
-
-    if (0) {
-      aoi = which( B$z > 5 & B$z < 3000 & B$z.range < 500)
-      levelplot( log(z) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
-      levelplot( log(t.ar_1) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
-      
-      levelplot( log(t.range) ~ plon + plat, B[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
-      levelplot( Z.rangeSD ~ plon + plat, B[aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
-    }
-  }
+    PS = cbind( PS, BS )
 
 
-  if (DS %in% c(  "lbm.prediction.mean", "lbm.prediction.sd", "lbm.prediction.redo", "lbm.prediction" )){
-
-		# NOTE: the primary interpolated data were already created by lbm. This routine points to this data and also creates 
-    # subsets of the data where required, determined by "subregions" 
-		savedir = file.path(p$project.root, "lbm", p$spatial.domain ) # already saved by lbm_db .. this is a synonym
+    save( PS, file=fns, compress=TRUE)
 
     if (DS %in% c("lbm.prediction", "lbm.prediction.mean")) {
       P = NULL
@@ -91,17 +90,19 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       # default domain
       PP0 = temperature.db( p=p, DS="lbm.prediction.mean", yr=yr)
       VV0 = temperature.db( p=p, DS="lbm.prediction.sd", yr=yr)
-      p0 = spatial_parameters( p=p, type=p$default.spatial.domain ) # from
+      p0 = spatial_parameters( p=p, type=p$spatial.domain ) # from
       L0 = bathymetry.db( p=p0, DS="baseline" )
-      L0i = as.matrix( round( cbind( 
-          ( L0$plon-p0$plons[1])/p0$pres + 1, (L0$plat-p0$plats[1])/p0$pres + 1 ) ) ) 
+      L0i = array_map( "xy->2", L0[, c("plon", "plat")], 
+        corner=c(p0$plons[1], p0$plats[1]), res=c(p0$pres, p0$pres) )
        
-      sreg = setdiff( p$subregions, p$spatial.domain.default ) 
+      sreg = setdiff( p$subregions, p$spatial.domain ) 
+
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
         L1 = bathymetry.db( p=p1, DS="baseline" )
-        L1i = as.matrix( round( cbind( 
-          ( L1$plon-p1$plons[1])/p1$pres + 1, (L1$plat-p1$plats[1])/p1$pres + 1 ) ) ) 
+        L1i = array_map( "xy->2", L1[, c("plon", "plat")], 
+          corner=c(p1$plons[1], p1$plats[1]), res=c(p1$pres, p1$pres) )
+
         L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
         L1$plon_1 = L1$plon # store original coords
         L1$plat_1 = L1$plat
@@ -151,6 +152,20 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       }
     } 
     return ("Completed")
+  }
+
+
+
+    if (0) {
+      aoi = which( PS$z > 5 & PS$z < 3000 & PS$z.range < 500)
+      levelplot( log(z) ~ plon + plat, PS[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      levelplot( log(t.ar_1) ~ plon + plat, PS[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      
+      levelplot( log(t.range) ~ plon + plat, PS[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+      levelplot( Z.rangeSD ~ plon + plat, PS[aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+    }
+
+    return( list(fns, fnd)) 
   }
 
 
@@ -227,30 +242,27 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
 
   if (DS %in% c("climatology", "climatology.redo") ) {
 
-    # form a basic prediction surface in planar coords for SS habitat for
-    # factors that do not "change" rapidly and
-    # e.g. climatological means of temperature characteristics, substrate, bathymetry
-
     outdir = file.path( project.datadirectory("bio.temperature"), "data", "interpolated" )
     dir.create(outdir, recursive=T, showWarnings=F)
 
     outfile =  file.path( outdir, paste("PS.climatology", p$spatial.domain, "rdata", sep="." ) )
-    if ( p$spatial.domain =="snowcrab" ) outfile = file.path( outdir, paste("PS.climatology", "ESS", "rdata", sep="." ) )
 
     if ( DS=="climatology" ) {
+      PS = NULL
       if (file.exists(outfile)) load( outfile )
-      if ( p$spatial.domain =="snowcrab" ) {
-        id = bathymetry.db( DS="lookuptable.sse.snowcrab" )
-        PS = PS[ id, ]
-      }
       return (PS)
     }
 
+    gridparams = list( dims=c(p$nplons, p$nplats), corner=c(p$plons[1], p$plats[1]), res=c(p$pres, p$pres) )
+
     PS = bathymetry.db( p=p, DS="baseline" )  # SS to a depth of 500 m  the default used for all planar SS grids
-    PS$id = 1:nrow(PS)
- 
-    TC = temperature.db( p=p, DS="lbm.finalize")
-    PS = merge( PS, TC, by="?") # or cbind ... Not finished
+    psid = lbm::array_map( "xy->1", PS[,c("plon", "plat")], gridparams=gridparams )
+
+    TC = temperature.db( p=p, DS="lbm.finalize.static")
+    tid = lbm::array_map( "xy->1", TC[,c("plon", "plat")], gridparams=gridparams )
+
+    u = match( tid, psid )
+    PS = cbind( PS, TC[u,] )
 
     B = matrix( NA, nrow=nrow(PS), ncol=length(p$tyears.climatology ) )
     climatology = matrix ( NA, nrow=nrow(PS), ncol=length(p$bstats)  )
@@ -275,41 +287,6 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
 
   # ----------------------------
 
-
-  if (DS %in% c("timeslice", "timeslice.redo") ) {
-
-    # form a timeslice of temperatures at a given time of year (dyear)
-
-    outdir = file.path( project.datadirectory("bio.temperature"), "data", "timeslice" )
-    dir.create(outdir, recursive=T, showWarnings=F)
-
-    outfile =  file.path( outdir, paste("PS.timeslice", p$spatial.domain, "rdata", sep="." ) )
-    if ( p$spatial.domain =="snowcrab" ) outfile = file.path( outdir, paste("PS.timeslice", "ESS", "rdata", sep="." ) )
-
-    if ( DS=="timeslice" ) {
-      if (file.exists(outfile)) load( outfile )
-      if ( p$spatial.domain =="snowcrab" ) {
-        id = bathymetry.db( DS="lookuptable.sse.snowcrab" )
-        PS = PS[ id, ]
-      }
-      return (PS)
-    }
-  
-    B0 = bathymetry.db( p=p, DS="baseline" ) 
-    id = which.min( abs( dyear - p$dyear_centre))
-    PS = matrix( NA, ncol=p$ny, nrow=nrow(B0) )
-    for (iy in 1:p$ny){
-      u = NULL
-      u = temperature.db(p=p, DS="lbm.prediction.mean", yr=p$tyears[iy] )
-      if (!is.null(u)) PS[,iy] = u
-    }
-
-    save( PS, file=outfile, compress=TRUE )
-    return(outfile)
-  }
-
-  # ----------------------------
-
   if (DS %in% c("complete", "complete.redo" )) {
     ### a conveniance data table to reduce number of merges occuring during modelling steps
     ### annual stats and climatology are merged together
@@ -329,7 +306,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     print ( "Completing and downscaling data where necessary ..." )
 
     # default domain climatology
-    p0 = spatial_parameters( type=p$spatial.domain.default )
+    p0 = spatial_parameters( type=p$spatial.domain )
     Z0 = matrix( NA, nrow=p0$nplons, ncol=p0$nplats)
     PS0 = bathymetry.db ( p=p0, DS="baseline" )
     PS0$id =1:nrow(PS0)
@@ -356,7 +333,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       PS0y = merge( PS0, E,  by =c("plon", "plat"), all.x=T, all.y=F, sort=F)
       PS0y = PS0y[ order( PS0$id), ]
 
-      if ( p$spatial.domain == p$spatial.domain.default ) {
+      if ( p$spatial.domain == p$spatial.domain ) {
         PS = PS0y
       } else {
         # down scale data to alternate grids

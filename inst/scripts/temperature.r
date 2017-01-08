@@ -70,6 +70,7 @@
     #  temperature.db( p=p, DS="lbm.prediction.redo" ) # 2hr in serial mode
 
 
+
     # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
     # temperature.db(  p=p, DS="bottom.statistics.annual.redo" )
     # or parallel runs: ~ 1 to 2 GB / process
@@ -89,7 +90,7 @@
   }
 
 
-  ### to this point everything is run on p$spatial.domain.default domain (except spatial.interpolation), now take subsets:
+  ### to this point everything is run on p$spatial.domain (except spatial.interpolation), now take subsets:
   # 7. downscale stats etc to appropriate domain: simple interpolations and maps 
  
      # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
