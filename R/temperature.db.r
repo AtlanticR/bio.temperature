@@ -29,7 +29,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
 
 
   if ( DS %in% c("lbm.finalize.redo", "lbm.finalize.static", "lbm.finalize.dynamic",
-   "lbm.prediction.mean", "lbm.prediction.sd", "lbm.prediction.redo", "lbm.prediction" )) {
+   "lbm.prediction.mean", "lbm.prediction.sd", "lbm.prediction.redo", "lbm.prediction" ) ) {
     #// temperature( p, DS="lbm.finalize(.redo)" return/create the
     #//   lbm interpolated method formatted and finalised for production use
     
@@ -152,9 +152,6 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       }
     } 
     return ("Completed")
-  }
-
-
 
     if (0) {
       aoi = which( PS$z > 5 & PS$z < 3000 & PS$z.range < 500)
@@ -164,9 +161,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       levelplot( log(t.range) ~ plon + plat, PS[ aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
       levelplot( Z.rangeSD ~ plon + plat, PS[aoi,], aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
     }
-
-    return( list(fns, fnd)) 
+  
   }
+
 
 
   # -----------------
