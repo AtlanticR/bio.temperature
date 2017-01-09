@@ -18,10 +18,11 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
-
-    if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
+    p$tyears.climatology = p$tyears
+    p$bstats = c("tmean", "tamplitude", "wmin", "thalfperiod", "tsd" )
     
-    p$ny = length(p$yrs)
+    if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
+        p$ny = length(p$yrs)
     p$nw = 10 # number of intervals in time within a year
     p$nt = p$nw*p$ny # must specify, else assumed = 1
     p$tres = 1/ p$nw # time resolution

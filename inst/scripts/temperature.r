@@ -59,48 +59,37 @@
     p = lbm( p=p, tasks=c( "stage1", "stage2", "stage3" ) )
     p = lbm( p=p, tasks=c( "save" ) )
 
-    # 3. simple spatial interpolation .. collect data from lbm and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
-    # ... it is required for the habitat lookup .. no way around it
-    # (complex/kriging takes too much time/cpu) ==> 3-4 hr/run
-    # using localhost in 2014 6+ hr for each run but with multiple cycles ~ 10 hr total
-    # use all clusters if available
+
+    # 3.  collect predictions from lbm and warp/break into sub-areas defined by p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
+    p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="lbm.prediction.redo" )
-    #  temperature.db( p=p, DS="lbm.prediction.redo" ) # 2hr in serial mode
+    parallel.run( temperature.db, p=p, DS="predictions.redo" )
+    
 
 
-
-    # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
-    # temperature.db(  p=p, DS="bottom.statistics.annual.redo" )
+    # 4. extract relevant statistics:: only for default grid 
     # or parallel runs: ~ 1 to 2 GB / process
     # 4 cpu's ~ 10 min
     p$clusters = rep("localhost", detectCores() )
-    # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
     p = make.list( list( yrs=p$tyears), Y=p )
     parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
-    #  temperature.db( p=p, DS="bottom.statistics.annual.redo" )
 
 
-    # 5. climatology database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
-    p$bstats = c("tmean", "tamplitude", "wmin", "thalfperiod", "tsd" )
-    p$tyears.climatology = p$tyears  # or redefine it with : p$tyears.climatology = 1950:2015
-    temperature.db ( p=p, DS="climatology.redo")
-
-  }
+    # 5. complete statistics and warp/regrid database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
+    p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
+    temperature.db( p=p, DS="complete.redo")
 
 
-  ### to this point everything is run on p$spatial.domain (except spatial.interpolation), now take subsets:
-  # 7. downscale stats etc to appropriate domain: simple interpolations and maps 
+  # 7. maps 
  
      # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
+    p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
     p = make.list( list( yrs=p$tyears), Y=p )
-
     for ( gr in p$subregions ) {
       print (gr)
       p = spatial_parameters(  p=p, type= gr )
-      parallel.run( temperature.db, p=p, DS="complete.redo")
       parallel.run( hydro.map, p=p, type="annual"  )
       parallel.run( hydro.map, p=p, type="global")
     }
