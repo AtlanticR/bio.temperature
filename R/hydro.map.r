@@ -118,7 +118,7 @@
       H = temperature.db( p=p, DS="complete", year=p$tyears[1] )
 
         if (type %in% c("temperatures", "global") ) {
-          datacols = c("plon", "plat", "tmean.cl")
+          datacols = c("plon", "plat", "tmean.climatology")
           datarange = seq(-1,11, length.out=50)
           cols = color.code( "blue.black", datarange )
           outfn = paste( "temperatures.bottom", sep=".")
@@ -129,7 +129,7 @@
         }
 
         if (type %in% c("amplitudes", "global") ) {
-          datacols = c("plon", "plat", "tamp.cl")
+          datacols = c("plon", "plat", "tamplitude.climatology")
           datarange = seq(0,10, length.out=50)
           cols = color.code( "blue.black", datarange )
           outfn = paste( "temperatures.bottom.amplitude", sep=".")
@@ -140,7 +140,7 @@
         }
 
         if (type %in% c("dyear.of.minima", "global") ) {
-          datacols = c("plon", "plat", "wmin.cl")
+          datacols = c("plon", "plat", "wmin.climatology")
           datarange = seq(0,p$nw, length.out=50)
           cols = color.code( "blue.yellow.blue", datarange )
           outfn = paste( "dyear.temperature.minima", sep=".")
@@ -151,7 +151,7 @@
                  }
 
         if (type %in% c("halfperiod", "global") ) {
-          datacols = c("plon", "plat", "thp.cl")
+          datacols = c("plon", "plat", "thalfperiod.climatology")
           datarange = seq(0, p$nw/2, length.out=50)
           cols = color.code( "blue.black", datarange )
           outfn = paste( "halfperiod.length", sep=".")
@@ -161,7 +161,7 @@
             corners=p$corners , spatial.domain=p$spatial.domain )
         }
         if (type %in% c("tsd", "global") ) {
-          datacols = c("plon", "plat", "tsd.cl")
+          datacols = c("plon", "plat", "tsd.climatology")
           datarange = seq(0, 5, length.out=50)
           cols = color.code( "blue.black", datarange )
           outfn = paste( "temperatures.bottom.sd",  sep=".")

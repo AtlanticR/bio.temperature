@@ -14,15 +14,16 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     if ( !exists("spatial.domain", p) ) p$spatial.domain = "canada.east"
     p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
     
-    if ( !exists("subregions", p) )  p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
+    if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
 
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
-    p$bstats = c("tmean", "tamplitude", "wmin", "thalfperiod", "tsd" )
-    
+    p$bstats = c("tmean", "tsd", "wmin", "wmax", "tmin", "tmax", "amplitude", "thalfperiod" )
+  
     if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
-        p$ny = length(p$yrs)
+    
+    p$ny = length(p$yrs)
     p$nw = 10 # number of intervals in time within a year
     p$nt = p$nw*p$ny # must specify, else assumed = 1
     p$tres = 1/ p$nw # time resolution

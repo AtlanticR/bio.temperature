@@ -60,8 +60,8 @@
     p = lbm( p=p, tasks=c( "save" ) )
 
 
-    # 3.  collect predictions from lbm and warp/break into sub-areas defined by p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
-    p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
+    # 3.  collect predictions from lbm and warp/break into sub-areas defined by p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) (in paramters() )
+    
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
     parallel.run( temperature.db, p=p, DS="predictions.redo" )
@@ -76,8 +76,11 @@
     parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
 
 
-    # 5. complete statistics and warp/regrid database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
-    p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
+    # 5. some time slices at specific weeks for fast data lookup for modelling
+    temperature.db( p=p,  DS="timeslice.redo" )
+
+
+    # 6. complete statistics and warp/regrid database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
     temperature.db( p=p, DS="complete.redo")
 
 
@@ -85,9 +88,8 @@
  
      # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
-    p$subregions = c( "SSE", "SSE.mpa", "snowcrab" ) 
     p = make.list( list( yrs=p$tyears), Y=p )
-    for ( gr in p$subregions ) {
+    for ( gr in p$spatial.domain.subareas ) {
       print (gr)
       p = spatial_parameters(  p=p, type= gr )
       parallel.run( hydro.map, p=p, type="annual"  )
