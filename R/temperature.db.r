@@ -14,7 +14,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     if (length(keep) > 0 ) B = B[ keep, ]
     
     # default output grid
-    Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
+    Bout = bathymetry.db( p, DS="baseline", varnames=varnames )
     coords = p$variables$LOCS
     covars = setdiff( p$varname, p$variables$LOCS )
     OUT  = list( 
@@ -297,6 +297,11 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       outdir =  file.path( project.datadirectory("bio.temperature"), "modelled" )
       outfile =  file.path( outdir, paste( "temperature", "complete", p$spatial.domain, "rdata", sep= ".") )
       if ( file.exists( outfile ) ) load( outfile )
+      Tnames = names(TM)
+      if (is.null(varnames)) varnames=Tnames
+      varnames = intersect( Tnames, varnames )
+      if (length(varnames) == 0) varnames=Tnames  # no match .. send all
+      TM = TM[ , varnames]
       return(TM)
     }
 
