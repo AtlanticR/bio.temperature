@@ -121,10 +121,10 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     }
 
 		if (DS %in% c("bottom.statistics.annual")) {
-      O = NULL
-      fn = file.path( tstatdir, paste("bottom.statistics.annual", p$spatial.domain, "rdata", sep=".") )
+      BS = NULL
+      fn = file.path( tstatdir, paste("bottom.statistics.annual", p$spatial.domain, ret, "rdata", sep=".") )
       if (file.exists( fn) ) load(fn)
-      return ( O )
+      return ( BS )
     }
 
     if (exists( "libs", p)) RLibrary( p$libs )
@@ -173,11 +173,16 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
         O[,iy,8] = abs( sin(O[,iy,4]/p0$nw*pi) - sin(O[,iy,3]/p0$nw*pi) ) * p0$nw/pi
 
       }
-   
-      fn = file.path( tstatdir, paste("bottom.statistics.annual", p1$spatial.domain, "rdata", sep=".") )
-      save( O, file=fn, compress=T )
-      O = NULL
-      gc()
+
+      # save sp-time matrix for each stat .. easier to load into lbm this way   
+      for ( st in 1:length(p$bstats) ){
+        BS = O[,,st]
+        fn = file.path( tstatdir, paste("bottom.statistics.annual", p1$spatial.domain, p$bstats[st], "rdata", sep=".") )
+        save( BS, file=fn, compress=T )
+        BS = NULL
+        gc()
+
+      }
 
       # climatology
       clim = matrix( NA, nrow=nrow(L1), ncol=length(p$bstats) )
@@ -188,7 +193,6 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       save( clim, file=fn.climatology, compress=T )
       clim = NULL
       gc()
-
 
     }
 
