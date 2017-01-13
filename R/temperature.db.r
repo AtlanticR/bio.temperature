@@ -1,5 +1,5 @@
 
-temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, dyear=NULL, ret="NULL" ) {
+temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL" ) {
   
   if (DS=="lbm.inputs") {
 
@@ -33,7 +33,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
     # This routine points to this data and also creates 
     # subsets of the data where required, determined by "spatial.domain.subareas" 
  
-    outdir = file.path(project.datadirectory("bio.temperature"), "modelled", p$spatial.domain)
+    outdir = file.path(project.datadirectory("bio.temperature"), "modelled", p$spatial.domain, p$variables$Y )
    
     if (DS %in% c("predictions")) {
       P = V = NULL
@@ -81,7 +81,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
           V[,iw] = spatial_warp( VV0[,iw], L0, L1, p0, p1, L0i, L1i )
         }
 
-        outdir_p1 = file.path(project.datadirectory("bio.temperature"), "modelled", p1$spatial.domain)
+        outdir_p1 = file.path(project.datadirectory("bio.temperature"), "modelled", p1$spatial.domain, p$variables$Y)
         dir.create( outdir_p1, recursive=T, showWarnings=F )
         fn1_sg = file.path( outdir_p1, paste("lbm.prediction.mean",  yr, "rdata", sep=".") )
         fn2_sg = file.path( outdir_p1, paste("lbm.prediction.sd",  yr, "rdata", sep=".") )
@@ -110,7 +110,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
 
   if (DS %in% c(  "bottom.statistics.annual", "bottom.statistics.annual.redo", "bottom.statistics.climatology" )){
 
-		tstatdir = file.path( project.datadirectory("bio.temperature"), "modelled" )
+		tstatdir = file.path( project.datadirectory("bio.temperature"), "modelled", p$variables$Y )
     dir.create( tstatdir, showWarnings=F, recursive = TRUE )
 
     if (DS == "bottom.statistics.climatology" ) {
@@ -140,7 +140,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       p1 = spatial_parameters( type=gr ) #target projection    
       L1 = bathymetry.db(p=p1, DS="baseline")
 
-      O = array( NA, dims=c( nrow(L1), p0$ny, length(p$bstats)) )
+      O = array( NA, dim=c( nrow(L1), p0$ny, length(p$bstats)) )
 
       for ( iy in 1:p0$ny ) {
 
@@ -205,19 +205,16 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
 
   if (DS %in% c(  "timeslice", "timeslice.redo" )){
 
-    tslicedir = file.path( project.datadirectory("bio.temperature"), "modelled",  p$spatial.domain )
+    tslicedir = file.path( project.datadirectory("bio.temperature"), "modelled",  p$spatial.domain, p$variables$Y )
     dir.create( tslicedir, showWarnings=F, recursive = TRUE )
 
-    if (exists("dyears", p)) {
-      dyear_index = which.min( abs( dyear - p$dyears))
-    } else {
-      dyear_index = 1
-    }
+    dyear_index = 1
+    if (exists("dyears", p) & exists("prediction.dyear", p))  dyear_index = which.min( abs( p$prediction.dyear - p$dyears))
 
     if (DS %in% c("timeslice")) {
       O = NULL
       if (is.null(ret)) ret="mean"
-      outfile =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, ret, "rdata", sep=".") )
+      outfile =  file.path( tslicedir, paste("bottom.timeslice", p$prediction.dyear, ret, "rdata", sep=".") )
       if (file.exists( outfile ) ) load(outfile)
       return ( O )
     }
@@ -239,10 +236,10 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       V = P = NULL
     }
 
-    outfileP =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
+    outfileP =  file.path( tslicedir, paste("bottom.timeslice", p$prediction.dyear, "mean", "rdata", sep=".") )
     save( Op, file=outfileP, compress=T )
 
-    outfileV =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
+    outfileV =  file.path( tslicedir, paste("bottom.timeslice", p$prediction.dyear, "sd", "rdata", sep=".") )
     save( Ov, file=outfileV, compress=T )
 
     # warp the other grids .. copy original as *0
@@ -270,12 +267,12 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
         Ov[,iy] = spatial_warp( Ov0[,iy], L0, L1, p0, p1, L0i, L1i )
       }
   
-      tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", p1$spatial.domain )
-      outfileP =  file.path( tslicedirp1, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
+      tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", p1$spatial.domain, p$variables$Y )
+      outfileP =  file.path( tslicedirp1, paste("bottom.timeslice", p$prediction.dyear, "mean", "rdata", sep=".") )
       O = Op
       save( O, file=outfileP, compress=T )
      
-      outfileV =  file.path( tslicedirp1, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
+      outfileV =  file.path( tslicedirp1, paste("bottom.timeslice", p$prediction.dyear, "sd", "rdata", sep=".") )
       O = Ov
       save( O, file=outfileV, compress=T )
     }
@@ -294,7 +291,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
 
     if (DS=="complete") {
       TM = NULL
-      outdir =  file.path( project.datadirectory("bio.temperature"), "modelled" )
+      outdir =  file.path( project.datadirectory("bio.temperature"), "modelled", p$spatial.domain)
       outfile =  file.path( outdir, paste( "temperature", "complete", p$spatial.domain, "rdata", sep= ".") )
       if ( file.exists( outfile ) ) load( outfile )
       Tnames = names(TM)
@@ -323,7 +320,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, d
       TM = cbind( TM, CL )
 
       # bring in last stats
-      outdir = file.path(project.datadirectory("bio.temperature"), "modelled" )
+      outdir = file.path(project.datadirectory("bio.temperature"), "modelled", p$spatial.domain)
       dir.create( outdir, recursive=T, showWarnings=F )
       outfile =  file.path( outdir, paste( "temperature", "complete", p1$spatial.domain, "rdata", sep= ".") )
       save( TM, file=outfile, compress=T )
