@@ -28,16 +28,17 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$nt = p$nw*p$ny # must specify, else assumed = 1
     p$tres = 1/ p$nw # time resolution
 
-    # output timeslices
-    tout = expand.grid( yr=p$tyears, dyear=1:p$nw, KEEP.OUT.ATTRS=FALSE )
-    tout$tiyr = tout$yr + tout$dyear/p$nw - p$tres/2 # mid-points
-    tout = tout[ order(tout$tiyr), ]
-    p$prediction.ts = tout$tiyr
-
+    
     p$dyears = (c(1:p$nw)-1)  / p$nw # intervals of decimal years... fractional year breaks
     p$dyear_centre = p$dyears[ round(p$nw/2) ] + p$tres/2
  
     p$prediction.dyear = 0.8 # used for creating timeslices .. needs to match the values in indicators.parameters()
+
+    # output timeslices for predictions
+    tout = expand.grid( yr=p$yrs, dyear=1:p$nw, KEEP.OUT.ATTRS=FALSE )
+    tout$tiyr = tout$yr + tout$dyear/p$nw - p$tres/2 # mid-points
+    tout = tout[ order(tout$tiyr), ]
+    p$prediction.ts = tout$tiyr
 
     return(p)
   }

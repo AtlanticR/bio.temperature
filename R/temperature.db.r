@@ -1,5 +1,8 @@
 
-temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL" ) {
+temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", voi="t" ) {
+
+  # over-ride default dependent variable name if it exists
+  if (exists("variables",p)) if(exists("Y", p$variables)) voi=p$variables$Y
   
   if (DS=="lbm.inputs") {
 
@@ -33,8 +36,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     # This routine points to this data and also creates 
     # subsets of the data where required, determined by "spatial.domain.subareas" 
  
-    outdir = file.path(project.datadirectory("bio.temperature"), "modelled", p$spatial.domain, p$variables$Y )
-   
+    outdir = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
+    
     if (DS %in% c("predictions")) {
       P = V = NULL
       fn = file.path( outdir, paste("lbm.prediction", ret,  yr, "rdata", sep=".") )
@@ -57,17 +60,13 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       VV0 = lbm_db( p=p, DS="lbm.prediction", yr=yr, ret="sd")
       p0 = spatial_parameters( p=p, type=p$spatial.domain ) # from
       L0 = bathymetry.db( p=p0, DS="baseline" )
-      L0i = array_map( "xy->2", L0[, c("plon", "plat")], 
-        corner=c(p0$plons[1], p0$plats[1]), res=c(p0$pres, p0$pres) )
-       
+      L0i = array_map( "xy->2", L0[, c("plon", "plat")], gridparams=p0$gridparams )
       sreg = setdiff( p$spatial.domain.subareas, p$spatial.domain ) 
 
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
         L1 = bathymetry.db( p=p1, DS="baseline" )
-        L1i = array_map( "xy->2", L1[, c("plon", "plat")], 
-          corner=c(p1$plons[1], p1$plats[1]), res=c(p1$pres, p1$pres) )
-
+        L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
         L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
         L1$plon_1 = L1$plon # store original coords
         L1$plat_1 = L1$plat
@@ -81,7 +80,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
           V[,iw] = spatial_warp( VV0[,iw], L0, L1, p0, p1, L0i, L1i )
         }
 
-        outdir_p1 = file.path(project.datadirectory("bio.temperature"), "modelled", p1$spatial.domain, p$variables$Y)
+        outdir_p1 = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain)
         dir.create( outdir_p1, recursive=T, showWarnings=F )
         fn1_sg = file.path( outdir_p1, paste("lbm.prediction.mean",  yr, "rdata", sep=".") )
         fn2_sg = file.path( outdir_p1, paste("lbm.prediction.sd",  yr, "rdata", sep=".") )
@@ -110,12 +109,12 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
   if (DS %in% c(  "bottom.statistics.annual", "bottom.statistics.annual.redo", "bottom.statistics.climatology" )){
 
-		tstatdir = file.path( project.datadirectory("bio.temperature"), "modelled", p$variables$Y )
+		tstatdir = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
     dir.create( tstatdir, showWarnings=F, recursive = TRUE )
 
     if (DS == "bottom.statistics.climatology" ) {
       clim = NULL
-      fn.climatology = file.path( tstatdir, paste("bottom.statistics.climatology", p1$spatial.domain, "rdata", sep=".") )
+      fn.climatology = file.path( tstatdir, paste("bottom.statistics.climatology", p$spatial.domain, "rdata", sep=".") )
       if (file.exists( fn.climatology ) ) load(fn.climatology)
       return ( clim )
     }
@@ -205,7 +204,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
   if (DS %in% c(  "timeslice", "timeslice.redo" )){
 
-    tslicedir = file.path( project.datadirectory("bio.temperature"), "modelled",  p$spatial.domain, p$variables$Y )
+    tslicedir = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
     dir.create( tslicedir, showWarnings=F, recursive = TRUE )
 
     dyear_index = 1
@@ -221,9 +220,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
     p0 = p  # the originating parameters
     L0 = bathymetry.db( p=p0, DS="baseline" )
-    L0i = array_map( "xy->2", L0, 
-      corner=c(p0$plons[1], p0$plats[1]), res=c(p0$pres, p0$pres) )
-     
+    L0i = array_map( "xy->2", L0, gridparams=p0$gridparams )
+
     Op = matrix(NA, ncol=p$ny, nrow=nrow(L0) )
     Ov = matrix(NA, ncol=p$ny, nrow=nrow(L0) )
     
@@ -252,8 +250,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       print(gr)
       p1 = spatial_parameters( type=gr ) #target projection
       L1 = bathymetry.db( p=p1, DS="baseline" )
-      L1i = array_map( "xy->2", L1[, c("plon", "plat")], 
-        corner=c(p1$plons[1], p1$plats[1]), res=c(p1$pres, p1$pres) )
+      L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
       L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
       L1$plon_1 = L1$plon # store original coords
       L1$plat_1 = L1$plat
@@ -267,7 +264,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
         Ov[,iy] = spatial_warp( Ov0[,iy], L0, L1, p0, p1, L0i, L1i )
       }
   
-      tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", p1$spatial.domain, p$variables$Y )
+      tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", voi, p1$spatial.domain )
       outfileP =  file.path( tslicedirp1, paste("bottom.timeslice", p$prediction.dyear, "mean", "rdata", sep=".") )
       O = Op
       save( O, file=outfileP, compress=T )
@@ -291,7 +288,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
     if (DS=="complete") {
       TM = NULL
-      outdir =  file.path( project.datadirectory("bio.temperature"), "modelled", p$spatial.domain)
+      outdir =  file.path( project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
       outfile =  file.path( outdir, paste( "temperature", "complete", p$spatial.domain, "rdata", sep= ".") )
       if ( file.exists( outfile ) ) load( outfile )
       Tnames = names(TM)
@@ -320,7 +317,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       TM = cbind( TM, CL )
 
       # bring in last stats
-      outdir = file.path(project.datadirectory("bio.temperature"), "modelled", p$spatial.domain)
+      outdir = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain)
       dir.create( outdir, recursive=T, showWarnings=F )
       outfile =  file.path( outdir, paste( "temperature", "complete", p1$spatial.domain, "rdata", sep= ".") )
       save( TM, file=outfile, compress=T )
