@@ -76,10 +76,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
         P = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
         V = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
         for (iw in 1:p$nw) {
-          P[,iw] = spatial_warp( PP0[,iw], L0, L1, p0, p1, L0i, L1i )
-          V[,iw] = spatial_warp( VV0[,iw], L0, L1, p0, p1, L0i, L1i )
+          P[,iw] = spatial_warp( PP0[,iw], L0, L1, p0, p1, "fast", L0i, L1i )
+          V[,iw] = spatial_warp( VV0[,iw], L0, L1, p0, p1, "fast", L0i, L1i )
         }
-
         outdir_p1 = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain)
         dir.create( outdir_p1, recursive=T, showWarnings=F )
         fn1_sg = file.path( outdir_p1, paste("lbm.prediction.mean",  yr, "rdata", sep=".") )
@@ -260,8 +259,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
         theta=p1$pres, xwidth=4*p1$pres, ywidth=4*p1$pres )
       Op = Ov = matrix(NA, ncol=p$ny, nrow=nrow(L1) )
       for (iy in 1:p$ny) {
-        Op[,iy] = spatial_warp( Op0[,iy], L0, L1, p0, p1, L0i, L1i )
-        Ov[,iy] = spatial_warp( Ov0[,iy], L0, L1, p0, p1, L0i, L1i )
+        Op[,iy] = spatial_warp( Op0[,iy], L0, L1, p0, p1, "fast", L0i, L1i )
+        Ov[,iy] = spatial_warp( Ov0[,iy], L0, L1, p0, p1, "fast", L0i, L1i )
       }
   
       tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", voi, p1$spatial.domain )
