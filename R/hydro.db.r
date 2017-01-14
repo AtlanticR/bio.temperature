@@ -127,7 +127,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     }
   }
 
-  ## 
+  ##
 
   if (DS=="USSurvey_NEFSC") {
     # data dump supplied by Adam Cook .. assumed to tbe bottom temperatures from their surveys in Gulf of Maine area?
@@ -140,11 +140,11 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     ne$sigmat = NA
     ne$date = ne$timestamp
     ne$yr = lubridate::year( ne$timestamp )
-    ne$dyear = lubridate::decimal_date( ne$timestamp ) - ne$yr 
+    ne$dyear = lubridate::decimal_date( ne$timestamp ) - ne$yr
     ne = planar2lonlat( ne, proj.type=p$internal.projection )  # convert lon lat to coord system of p0
     if (is.null(yr)) return(ne) # everything
     i = which( lubridate::year( ne$timestamp) %in% yr )
-    if (length(i) > 0) ne = ne[i,]    
+    if (length(i) > 0) ne = ne[i,]
     return (ne)
   }
 
@@ -178,9 +178,9 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     require (ROracle)
     connect = Oracle()
     con =dbConnect( connect, username=oracle.personal.user, password=oracle.personal.password, dbname="PTRAN" )
-    
+
     cruises   <- dbGetQuery(con, "select * from ODF_ARCHIVE.ODF_CRUISE_EVENT" )
- 
+
     for ( y in yr ) {
       fny = file.path( fn.root, paste( y, "rdata", sep="."))
       odfdat = sqlQuery( con,  paste(
@@ -200,7 +200,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     odbcClose(connect)
     return (fn.root)
 
-  } 
+  }
 
   # ----------------
 
@@ -505,8 +505,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
         tp = rename.df( tp, "temperature", "t")
         tp = rename.df( tp, "depth", "z")
 
-        tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y ) 
-  
+        tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y )
+
         tp = rbind( tp, tne[,names(tp)] )
 
         tp$date = as.Date( tp$date ) # strip out time of day information
@@ -523,11 +523,13 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
         tp = lonlat2planar( tp, proj.type=p$internal.projection )
 
-				tp$lon = grid.internal( tp$lon, p$lons )
-        tp$lat = grid.internal( tp$lat, p$lats )
+        grid = spatial_grid(p=p, DS="lonlat.coords")
+				tp$lon = grid.internal( tp$lon, grid$lons )
+        tp$lat = grid.internal( tp$lat, grid$lats )
 
-				tp$plon = grid.internal( tp$plon, p$plons )
-        tp$plat = grid.internal( tp$plat, p$plats )
+        pgrid = spatial_grid(p=p, DS="planar.coords")
+				tp$plon = grid.internal( tp$plon, pgrid$plons )
+        tp$plat = grid.internal( tp$plat, pgrid$plats )
 
 				tp = tp[ which( is.finite( tp$lon + tp$lat + tp$plon + tp$plat ) ) , ]
         ## ensure that inside each grid/time point

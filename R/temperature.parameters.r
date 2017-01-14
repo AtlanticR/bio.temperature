@@ -15,7 +15,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
     
     if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
-
+  
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
@@ -28,17 +28,16 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$nt = p$nw*p$ny # must specify, else assumed = 1
     p$tres = 1/ p$nw # time resolution
 
+    # output timeslices
     tout = expand.grid( yr=p$tyears, dyear=1:p$nw, KEEP.OUT.ATTRS=FALSE )
     tout$tiyr = tout$yr + tout$dyear/p$nw - p$tres/2 # mid-points
     tout = tout[ order(tout$tiyr), ]
-    p$ts = tout$tiyr
+    p$prediction.ts = tout$tiyr
 
     p$dyears = (c(1:p$nw)-1)  / p$nw # intervals of decimal years... fractional year breaks
     p$dyear_centre = p$dyears[ round(p$nw/2) ] + p$tres/2
-
-    p$spatial_distance_max = 25 # obsolete .. used by old inverse distance method .. to be retired shortly
-
-    p$prediction.dyear = 0.75 # used for creating timeslices .. needs to match the values in indicators.parameters()
+ 
+    p$prediction.dyear = 0.8 # used for creating timeslices .. needs to match the values in indicators.parameters()
 
     return(p)
   }
@@ -47,8 +46,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
   if (DS=="lbm") {
 
     p$libs = RLibrary( c( p$libs, "lbm" ) ) # required for parallel processing
-    p$clusters = rep("localhost", detectCores() )    
     p$storage.backend="bigmemory.ram"
+    if (!exists("clusters", p)) p$clusters = rep("localhost", detectCores() )
+  
 
     p$boundary = TRUE 
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
