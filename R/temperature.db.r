@@ -147,7 +147,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
   			print ( paste("Year:", y)  )
         
-  			V = temperature.db( p=p1, DS="prediction", yr=y, ret="sd"  )
+  			V = temperature.db( p=p1, DS="predictions", yr=y, ret="sd"  )
   			V[ V < 0.1 ] = 100  # shrink weighting of unreasonably small SEs
   		  V[ which( !is.finite(V)) ] = 1000 # "
   #			V[ ibaddata ] = 10000 # " smaller still
@@ -227,7 +227,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     
     for ( r in 1:p$ny ) {
       print ( paste("Year:", p$tyears[r])  )
-      V = temperature.db( p=p, DS="prediction", yr=y, ret="sd"  )
+      V = temperature.db( p=p, DS="predictions", yr=y, ret="sd"  )
       if (!is.null(V)) Ov[,r] = V[,dyear_index]
       P = temperature.db( p=p, DS="predictions", yr=y, ret="mean"  )
       if (!is.null(P))  Op[,r] = P[,dyear_index]
