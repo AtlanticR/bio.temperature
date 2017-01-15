@@ -447,14 +447,13 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     }
 
     if (DS == "bottom.gridded.all.redo" ) {
-      if (is.null(yr)) yr=p$tyears # defaults to tyears if no yr specified
-      for (y in yr ) {
+      for (y in p$tyears ) {
           On = hydro.db(p=p, DS="bottom.gridded", yr=y)
           if ( is.null( On) ) next()
           O = rbind( O, On )
         }
       save( O, file=fnall, compress=TRUE )
-      O = O[ which( O$yr %in% yr) , ]
+      if (!is.null(yr)) O = O[ which( O$yr %in% yr) , ]
       return( fnall )
     }
 

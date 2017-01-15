@@ -17,9 +17,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     if (length(keep) > 0 ) B = B[ keep, ]
     
     # default output grid
-    Bout = bathymetry.db( p, DS="baseline", varnames=varnames )
+    Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
     coords = p$variables$LOCS
-    covars = setdiff( p$varname, p$variables$LOCS )
+    covars = setdiff( p$varnames, p$variables$LOCS )
     OUT  = list( 
       LOCS = Bout[,coords],
       COV = as.list( Bout[,covars] ) 
