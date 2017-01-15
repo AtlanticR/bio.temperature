@@ -57,6 +57,9 @@
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
     
+    p = bio.temperature::temperature.parameters( current.year=current.year )
+    p = bio.temperature::temperature.parameters( DS="lbm", p=p )
+   
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
     p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model
     p = lbm( p=p, tasks=c( "stage1", "stage2", "stage3" ) )

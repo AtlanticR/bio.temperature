@@ -20,10 +20,11 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
     coords = p$variables$LOCS
     covars = setdiff( p$varnames, p$variables$LOCS )
-    OUT  = list( 
-      LOCS = Bout[,coords],
-      COV = as.list( Bout[,covars] ) 
-    )          
+    if (length(covars)==1) {
+      OUT  = list( LOCS = Bout[,coords], COV=list( Bout[,covars] ) ) 
+    } else {
+      OUT  = list( LOCS = Bout[,coords], COV=as.list( Bout[,covars] ) ) 
+    }
 
     return (list(input=B, output=OUT))
   }
