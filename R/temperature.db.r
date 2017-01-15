@@ -21,7 +21,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     coords = p$variables$LOCS
     covars = setdiff( p$varnames, p$variables$LOCS )
     if (length(covars)==1) {
-      OUT  = list( LOCS = Bout[,coords], COV=list( Bout[,covars] ) ) 
+      covs = list( Bout[,covars] )
+      names(covs) = covars
+      OUT  = list( LOCS = Bout[,coords], COV=covs ) 
     } else {
       OUT  = list( LOCS = Bout[,coords], COV=as.list( Bout[,covars] ) ) 
     }
