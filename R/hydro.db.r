@@ -448,7 +448,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
     if (DS == "bottom.gridded.all.redo" ) {
       if (is.null(yr)) yr=p$tyears # defaults to tyears if no yr specified
-      for (y in p$tyears ) {
+      for (y in yr ) {
           On = hydro.db(p=p, DS="bottom.gridded", yr=y)
           if ( is.null( On) ) next()
           O = rbind( O, On )
@@ -524,12 +524,12 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
         tp = lonlat2planar( tp, proj.type=p$internal.projection )
 
         grid = spatial_grid(p=p, DS="lonlat.coords")
-				tp$lon = grid.internal( tp$lon, grid$lons )
-        tp$lat = grid.internal( tp$lat, grid$lats )
+				tp$lon = grid.internal( tp$lon, grid$lon )
+        tp$lat = grid.internal( tp$lat, grid$lat )
 
         pgrid = spatial_grid(p=p, DS="planar.coords")
-				tp$plon = grid.internal( tp$plon, pgrid$plons )
-        tp$plat = grid.internal( tp$plat, pgrid$plats )
+				tp$plon = grid.internal( tp$plon, pgrid$plon )
+        tp$plat = grid.internal( tp$plat, pgrid$plat )
 
 				tp = tp[ which( is.finite( tp$lon + tp$lat + tp$plon + tp$plat ) ) , ]
         ## ensure that inside each grid/time point

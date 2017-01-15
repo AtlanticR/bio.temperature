@@ -39,14 +39,17 @@
   # ------------------------------
 
   if (create.interpolated.results.lbm ) {
-    
+
+    p = bio.temperature::temperature.parameters( current.year=current.year )
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     
     # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
     p = make.list( list( yrs=p$tyears), Y=p )
     # parallel.run( hydro.db, p=p, DS="bottom.gridded.redo" )
-    hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
-    hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
+    hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument:
+    # hydro.db( p=p, DS="bottom.gridded.redo", yr=p$newyear ) 
+    hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: 
+    # hydro.db( p=p, DS="bottom.gridded.all.redo", yr=p$newyear ) 
 
     # 2. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
