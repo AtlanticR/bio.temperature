@@ -70,7 +70,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$n.max = 2000 # numerical time/memory constraint -- anything larger takes too much time
     p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # 
 
-
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
     p$varnames = c( p$variables$LOCS, p$variables$COV ) # to extract for prediction
 
