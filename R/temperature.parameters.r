@@ -119,7 +119,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$lbm_local_model_distanceweighted = TRUE
 
-      p$lbm_fft_filter = "spatial.process"
+      # p$lbm_fft_filter = "spatial.process"
+      p$lbm_fft_filter = "krige"
+
       p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
       p$lbm_lowpass_nu = 0.5
 
