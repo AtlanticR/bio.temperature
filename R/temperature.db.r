@@ -16,6 +16,9 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
     if (length(keep) > 0 ) B = B[ keep, ]
     
+    keep = which( B$z >=  1 ) # ignore very shallow areas ..
+    if (length(keep) > 0 ) B = B[ keep, ]
+    
     # default output grid
     Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
     coords = p$variables$LOCS
