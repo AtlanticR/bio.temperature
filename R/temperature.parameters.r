@@ -99,8 +99,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
         #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
         p$lbm_local_model_distanceweighted = TRUE
-        p$lbm_gam_optimizer="perf"
-        # p$lbm_gam_optimizer=c("outer", "bfgs") 
+        # p$lbm_gam_optimizer="perf"
+        p$lbm_gam_optimizer=c("outer", "bfgs") 
         
     } else if (p$lbm_local_modelengine =="fft") {
 
@@ -115,7 +115,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # 18 GB RAM for 24 CPU .. 
       p$lbm_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s(log(z), k=3, bs="ts")
-          + s(cos.w, sin.w, yr, bs="ts", k=9) )
+          + s(cos.w, sin.w, yr, bs="ts", k=36) )
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$lbm_local_model_distanceweighted = TRUE
 
