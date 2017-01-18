@@ -49,7 +49,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$libs = RLibrary( c( p$libs, "lbm" ) ) # required for parallel processing
     p$storage.backend="bigmemory.ram"
     if (!exists("clusters", p)) p$clusters = rep("localhost", detectCores() )
-  
 
     p$boundary = TRUE 
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
@@ -63,13 +62,11 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$lbm_distance_scale = 25 # km ... approx guess of 95% AC range 
     p$lbm_distance_min = p$lbm_distance_statsgrid 
     p$lbm_distance_max = 50 
-
   
     p$n.min = 200 # n.min/n.max changes with resolution must be more than the number of knots/edf
     # min number of data points req before attempting to model timeseries in a localized space
     p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
     p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # 
-
 
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
     if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
@@ -81,11 +78,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
   
     p$lbm_local_family = gaussian()
 
-    if (p$lbm_local_modelengine == "gaussianprocess2Dt") {
- 
-      message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
- 
-    } else if (p$lbm_local_modelengine =="gam") {
+    if (p$lbm_local_modelengine =="gam") {
       # 32 hours on nyx all cpus; 
       # XX hrs on thoth all cpus
       
@@ -102,12 +95,15 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
         # p$lbm_gam_optimizer="perf"
         p$lbm_gam_optimizer=c("outer", "bfgs") 
         
-    } else if (p$lbm_local_modelengine =="fft") {
+    # } else if (p$lbm_local_modelengine =="fft") {
+    #   # lowpass seems a bit too noisy
+    #   # spatial process and lowpass_spatial.process are over-smooth 
+    #   # p$lbm_fft_filter = "lowpass" # only act as a low pass filter .. depth has enough data for this. Otherwise, use: 
+    #   p$lbm_fft_filter = "spatial.process" # to ~ unviersal krige with external drift
 
-      # p$lbm_fft_filter = "lowpass" # only act as a low pass filter .. depth has enough data for this. Otherwise, use: 
-      p$lbm_fft_filter = "spatial.process" # to ~ unviersal krige with external drift
-      p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter
-      p$lbm_lowpass_nu = 0.5
+    # } else if (p$lbm_local_modelengine == "gaussianprocess2Dt") {
+    #   message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
+    # } 
 
     } else if (p$lbm_local_modelengine =="twostep") {
       # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM .. about 1/3 faster than 24 cpus systems
@@ -122,17 +118,15 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # p$lbm_fft_filter = "spatial.process"
       p$lbm_fft_filter = "krige"
 
-      p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
-      p$lbm_lowpass_nu = 0.5
 
-    } else if (p$lbm_local_modelengine =="spate") {
- 
-      # similar to the two-step but use "spate" (spde, bayesian, mcmc) instead of "fields" (GMRF, ML)
-      p$lbm_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
-          + s(cos.w, sin.w, yr, bs="ts") )
-        # similar to GAM model but no spatial component , space and time are handled via FFT but time is seeded by the averge local TS signal (to avoid missing data isses in time.)
-      p$lbm_local_model_distanceweighted = TRUE
+    # } else if (p$lbm_local_modelengine =="spate") {
+    # still needs some work 
+    #   # similar to the two-step but use "spate" (spde, bayesian, mcmc) instead of "fields" (GMRF, ML)
+    #   p$lbm_local_modelformula = formula(
+    #     t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
+    #       + s(cos.w, sin.w, yr, bs="ts") )
+    #     # similar to GAM model but no spatial component , space and time are handled via FFT but time is seeded by the averge local TS signal (to avoid missing data isses in time.)
+    #   p$lbm_local_model_distanceweighted = TRUE
  
     } else if (p$lbm_local_modelengine == "bayesx") {
  
@@ -153,6 +147,12 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     
       message( "The specified lbm_local_modelengine is not tested/supported ... you are on your own ;) ..." )
 
+    }
+
+    # for fft-based methods that require lowpass:
+    if (p$lbm_fft_filter %in% c("lowpass_spatial.process", "lowpass") ) {
+      p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
+      p$lbm_lowpass_nu = 0.5
     }
     
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )

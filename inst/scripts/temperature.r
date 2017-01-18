@@ -60,7 +60,9 @@
     current.year=2016
     
     p = bio.temperature::temperature.parameters( current.year=current.year )
-    p$lbm_local_modelengine = "twostep"
+    # p$lbm_local_modelengine = "twostep"
+    p$lbm_local_modelengine = "gam"
+
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
