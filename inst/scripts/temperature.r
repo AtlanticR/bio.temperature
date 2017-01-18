@@ -57,6 +57,8 @@
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
     
+    current.year=2016
+    
     p = bio.temperature::temperature.parameters( current.year=current.year )
     p$lbm_local_modelengine = "twostep"
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
