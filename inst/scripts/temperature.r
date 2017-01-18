@@ -63,7 +63,8 @@
    
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
     p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
-#   p = lbm( p=p, tasks=c( "stage0" ) )      
+#   p = lbm( p=p, tasks=c( "stage0" ) )
+#   p = lbm( p=p, tasks=c( "continue" ) )      
     p = lbm( p=p, tasks=c( "stage1" ) ) #  ~24 hrs 
     p = lbm( p=p, tasks=c( "stage2" ) )
     p = lbm( p=p, tasks=c( "stage3" ) )
