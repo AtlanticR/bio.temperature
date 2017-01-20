@@ -63,12 +63,12 @@
           cols = color.code( "blue.black", datarange )
           outfn = paste( "temperatures.bottom", y, sep=".")
           annot = y
-          
+        } 
+         
           map( xyz=cbind(loc, H[,iy], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
             fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
-            corners=p$corners, spatial.domain=p$spatial.domain )
-        }
-
+            corners=p$corners, spatial.domain=p$spatial.domain ) )
+        
         if (type %in% c("amplitudes", "annual") ) {
           datacols = c("plon", "plat", "tamp")
           datarange = seq(0,10, length.out=50)
