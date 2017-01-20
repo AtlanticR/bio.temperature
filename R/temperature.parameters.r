@@ -151,7 +151,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     # for fft-based methods that require lowpass:
     
-    if (exists("lbm_fft_filter"), p) {
+    if (exists("lbm_fft_filter", p)) {
       if (p$lbm_fft_filter %in% c("lowpass_spatial.process", "lowpass") ) {
         p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
         p$lbm_lowpass_nu = 0.5
