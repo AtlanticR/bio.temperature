@@ -66,13 +66,13 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       VV0 = lbm_db( p=p, DS="lbm.prediction", yr=yr, ret="sd")
       p0 = spatial_parameters( p=p, type=p$spatial.domain ) # from
       L0 = bathymetry.db( p=p0, DS="baseline" )
-      L0i = array_map( "xy->2", L0[, c("plon", "plat")], gridparams=p0$gridparams )
+      L0i = lbm::array_map( "xy->2", L0[, c("plon", "plat")], gridparams=p0$gridparams )
       sreg = setdiff( p$spatial.domain.subareas, p$spatial.domain ) 
 
       for ( gr in sreg ) {
         p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
         L1 = bathymetry.db( p=p1, DS="baseline" )
-        L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
+        L1i = lbm::array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
         L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
         L1$plon_1 = L1$plon # store original coords
         L1$plat_1 = L1$plat
@@ -221,7 +221,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
     p0 = p  # the originating parameters
     L0 = bathymetry.db( p=p0, DS="baseline" )
-    L0i = array_map( "xy->2", L0, gridparams=p0$gridparams )
+    L0i = lbm::array_map( "xy->2", L0, gridparams=p0$gridparams )
 
     Op = matrix(NA, ncol=p$ny, nrow=nrow(L0) )
     Ov = matrix(NA, ncol=p$ny, nrow=nrow(L0) )
@@ -251,7 +251,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       print(gr)
       p1 = spatial_parameters( type=gr ) #target projection
       L1 = bathymetry.db( p=p1, DS="baseline" )
-      L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
+      L1i = lbm::array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
       L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
       L1$plon_1 = L1$plon # store original coords
       L1$plat_1 = L1$plat
@@ -298,13 +298,13 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     Snames = colnames(S0)
     p0 = spatial_parameters( p=p, type=p$spatial.domain ) # from
     L0 = bathymetry.db( p=p0, DS="baseline" )
-    L0i = array_map( "xy->2", L0[, c("plon", "plat")], gridparams=p0$gridparams )
+    L0i = lbm::array_map( "xy->2", L0[, c("plon", "plat")], gridparams=p0$gridparams )
     sreg = setdiff( p$spatial.domain.subareas, p$spatial.domain ) 
 
     for ( gr in sreg ) {
       p1 = spatial_parameters( p=p, type=gr ) # 'warping' from p -> p1
       L1 = bathymetry.db( p=p1, DS="baseline" )
-      L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
+      L1i = lbm::array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
       L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
       L1$plon_1 = L1$plon # store original coords
       L1$plat_1 = L1$plat
