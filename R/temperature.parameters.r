@@ -63,10 +63,10 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$lbm_distance_min = p$lbm_distance_statsgrid 
     p$lbm_distance_max = 50 
   
-    p$n.min = 200 # n.min/n.max changes with resolution must be more than the number of knots/edf
+    p$n.min = 250 # n.min/n.max changes with resolution must be more than the number of knots/edf
     # min number of data points req before attempting to model timeseries in a localized space
-    p$n.max = 8000 # numerical time/memory constraint -- anything larger takes too much time
-    p$sampling = c( 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 1.75, 2 )  # 
+    p$n.max = 7500 # numerical time/memory constraint -- anything larger takes too much time
+    p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5 )  # 
 
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
     if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
@@ -85,7 +85,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       p$lbm_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s( log(z), k=3, bs="ts")
           + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
+          + s(plon, plat, cos.w, sin.w, yr, k=120, bs="ts") )  
       # more than 100 knots and it takes a very long time, 50 seems sufficient, given the large-scaled pattern outside of the prediction box
       # other possibilities:
         #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',

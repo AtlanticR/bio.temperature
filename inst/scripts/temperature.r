@@ -117,9 +117,11 @@
     for ( gr in p$spatial.domain.subareas ) {
       print (gr)
       p = spatial_parameters(  p=p, type= gr )
+      hydro.map( p=p, type="lbm.stats" ) # no parallel option .. just a few
+      hydro.map( p=p, type="climatology" ) # no parallel option .. just a few
+      parallel.run( hydro.map, p=p, type="seasonal" )
       for ( bs in p$bstats )
         parallel.run( hydro.map, p=p, type="annual", vname=bs )
-        parallel.run( hydro.map, p=p, type="global", vname=bs )
       }
     }
     

@@ -189,6 +189,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
         clim[,si] = rowMeans(O[,,si], na.rm=T)
       }
       fn.climatology = file.path( tstatdir_p1, paste("bottom.statistics.climatology", p1$spatial.domain, "rdata", sep=".") )
+      colnames(clim) = p$bstats
       save( clim, file=fn.climatology, compress=T )
       clim = NULL
       gc()
@@ -359,11 +360,11 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       TM = cbind( L1, BS )
 
       CL = temperature.db( p=p1, DS="bottom.statistics.climatology" )
-      colnames(CL) = paste(colnames(CL), "climatology", sep=".")
+      colnames(CL) = paste(p$bstats, "climatology", sep=".")
       TM = cbind( TM, CL )
 
       # bring in last stats
-      outdir = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain)
+      outdir = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain)
       dir.create( outdir, recursive=T, showWarnings=F )
       outfile =  file.path( outdir, paste( "temperature", "complete", p1$spatial.domain, "rdata", sep= ".") )
       save( TM, file=outfile, compress=T )
