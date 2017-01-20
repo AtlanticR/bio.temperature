@@ -144,6 +144,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       p1 = spatial_parameters( type=gr ) #target projection    
       L1 = bathymetry.db(p=p1, DS="baseline")
 
+      tstatdir_p1 = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain )
+
       O = array( NA, dim=c( nrow(L1), p0$ny, length(p$bstats)) )
 
       for ( iy in 1:p0$ny ) {
@@ -174,7 +176,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       # save sp-time matrix for each stat .. easier to load into lbm this way   
       for ( st in 1:length(p$bstats) ){
         BS = O[,,st]
-        fn = file.path( tstatdir, paste("bottom.statistics.annual", p1$spatial.domain, p$bstats[st], "rdata", sep=".") )
+        fn = file.path( tstatdir_p1, paste("bottom.statistics.annual", p1$spatial.domain, p$bstats[st], "rdata", sep=".") )
         save( BS, file=fn, compress=T )
         BS = NULL
         gc()
@@ -186,7 +188,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       for (si in 1:length(p$bstats)) {
         clim[,si] = rowMeans(O[,,si], na.rm=T)
       }
-      fn.climatology = file.path( tstatdir, paste("bottom.statistics.climatology", p1$spatial.domain, "rdata", sep=".") )
+      fn.climatology = file.path( tstatdir_p1, paste("bottom.statistics.climatology", p1$spatial.domain, "rdata", sep=".") )
       save( clim, file=fn.climatology, compress=T )
       clim = NULL
       gc()
@@ -292,6 +294,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     # downscale and warp from p(0) -> p1
     # default domain
     S0 = lbm_db( p=p, DS="stats.to.prediction.grid" )
+    Snames = colnames(S0)
     p0 = spatial_parameters( p=p, type=p$spatial.domain ) # from
     L0 = bathymetry.db( p=p0, DS="baseline" )
     L0i = array_map( "xy->2", L0[, c("plon", "plat")], gridparams=p0$gridparams )
@@ -310,6 +313,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       for ( i in 1:ncol(S0) ) {
         stats[,i] = spatial_warp( S0[,i], L0, L1, p0, p1, "fast", L0i, L1i )
       }
+      colnames(stats) = Snames
       outdir_p1 = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain)
       dir.create( outdir_p1, recursive=T, showWarnings=F )
       fn1_sg = file.path( outdir_p1, paste("lbm.statistics", "rdata", sep=".") )
@@ -353,7 +357,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
       BS = temperature.db( p=p1, DS="lbm.stats" )
       colnames(BS) = paste("t", colnames(BS), sep=".")
-      TM = cbind( L0, BS )
+      TM = cbind( L1, BS )
 
       CL = temperature.db( p=p1, DS="bottom.statistics.climatology" )
       colnames(CL) = paste(colnames(CL), "climatology", sep=".")
