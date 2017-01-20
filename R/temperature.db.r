@@ -279,10 +279,10 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
 
   if (DS %in% c(  "lbm.stats", "lbm.stats.redo" )){
-    browser()
+
     outdir = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
     
-    if (DS %in% c("predictions")) {
+    if (DS %in% c("lbm.stats")) {
       stats = NULL
       fn = file.path( outdir, paste( "lbm.statistics", "rdata", sep=".") )
       if (file.exists(fn) ) load(fn) 
