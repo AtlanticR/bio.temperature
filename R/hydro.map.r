@@ -40,7 +40,7 @@
       dir.create( bottomdir.maps, recursive=T, showWarnings=F )
 
 
-      loc = bathymetry.db(p=p, DS"baseline" )
+      loc = bathymetry.db(p=p, DS="baseline" )
 
       for (iy in ip ) {
         y = p$runs[iy, "yrs"]
