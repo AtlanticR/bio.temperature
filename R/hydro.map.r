@@ -1,5 +1,5 @@
 
-  hydro.map = function( ip=NULL, p=NULL, type="annual", ... ) {
+  temperature.map = function( ip=NULL, p=NULL, type="annual", vname=NULL ) {
 
     # ip is the first parameter passed in the parallel mode
     if (exists( "libs", p)) RLibrary( p$libs )
@@ -19,7 +19,7 @@
       xyz = xyz[, c("plon", "plat")]
       for (iy in ip ) {
         y = p$runs[iy, "yrs"]
-        H = temperature.db( p=p, DS="temporal.interpolation", yr=y  )
+        H = temperature.db( p=p, DS="predictions", yr=y, ret="mean"  )
         if (is.null(H)) next ()
         for (w in 1:p$nw ) {
           wchar = paste( "0", w, sep="" )
@@ -34,16 +34,19 @@
       return( "Completed maps")
     }
 
-    if ( type %in% c("annual", "amplitudes", "temperatures", "tsd" ) ) {
+    if ( type %in% c("annual" ) ) {
 
       bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain , "bottom.predictions", "annual" )
       dir.create( bottomdir.maps, recursive=T, showWarnings=F )
+
+
+      loc = bathymetry.db(p=p, DS"baseline" )
 
       for (iy in ip ) {
         y = p$runs[iy, "yrs"]
         print(y)
 
-        H = temperature.db( p=p, DS="complete", year=y )
+        H = temperature.db( p=p, DS="bottom.statistics.annual", year=y, ret=vname )
 
         if ( p$spatial.domain=="snowcrab" ) {
           i = which( H$plon< 990 &  H$plon > 220  &   ## these are in planar coords  ..should fix this hack one day
@@ -55,11 +58,13 @@
 
         if (type %in% c("temperatures", "annual") ) {
           datacols = c("plon", "plat", "tmean")
+
           datarange = seq(-1,11, length.out=50)
           cols = color.code( "blue.black", datarange )
           outfn = paste( "temperatures.bottom", y, sep=".")
           annot = y
-          map( xyz=H[,datacols], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
+          
+          map( xyz=cbind(loc, H[,iy], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
             fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
             corners=p$corners, spatial.domain=p$spatial.domain )
         }

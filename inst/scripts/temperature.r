@@ -93,9 +93,8 @@
     temperature.db( p=p, DS="lbm.stats.redo" ) # warp to sub grids
 
 
-    # 4. extract relevant statistics:: only for default grid 
-    # or parallel runs: ~ 1 to 2 GB / process
-    # 4 cpu's ~ 10 min
+    # 4. extract relevant statistics 
+    # or parallel runs: ~ 1 to 2 GB / process .. ~ 1 hr
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
     parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
@@ -118,8 +117,10 @@
     for ( gr in p$spatial.domain.subareas ) {
       print (gr)
       p = spatial_parameters(  p=p, type= gr )
-      parallel.run( hydro.map, p=p, type="annual"  )
-      parallel.run( hydro.map, p=p, type="global")
+      for ( bs in p$bstats )
+        parallel.run( hydro.map, p=p, type="annual", vname=bs )
+        parallel.run( hydro.map, p=p, type="global", vname=bs )
+      }
     }
     
 

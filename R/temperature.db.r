@@ -330,9 +330,8 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
 
   if (DS %in% c("complete", "complete.redo" )) {
-    # NOTE: the primary interpolated data were already created by lbm. This routine points to this data and also creates 
-  # subsets of the data where required, determined by "spatial.domain.subareas" 
-
+    # static summaries
+    
     if (DS=="complete") {
       TM = NULL
       outdir =  file.path( project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
