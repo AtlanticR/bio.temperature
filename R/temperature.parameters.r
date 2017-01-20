@@ -150,11 +150,14 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     }
 
     # for fft-based methods that require lowpass:
-    if (p$lbm_fft_filter %in% c("lowpass_spatial.process", "lowpass") ) {
-      p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
-      p$lbm_lowpass_nu = 0.5
-    }
     
+    if (exists("lbm_fft_filter"), p) {
+      if (p$lbm_fft_filter %in% c("lowpass_spatial.process", "lowpass") ) {
+        p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
+        p$lbm_lowpass_nu = 0.5
+      }
+    }
+        
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
     
     p$varnames = c( p$variables$LOCS, p$variables$COV ) # to extract for prediction

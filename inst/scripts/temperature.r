@@ -90,6 +90,8 @@
     parallel.run( temperature.db, p=p, DS="predictions.redo" ) # 10 min
     
 
+    temperature.db( p=p, DS="lbm.stats.redo" ) # warp to sub grids
+
 
     # 4. extract relevant statistics:: only for default grid 
     # or parallel runs: ~ 1 to 2 GB / process
