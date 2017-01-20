@@ -279,7 +279,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
 
 
   if (DS %in% c(  "lbm.stats", "lbm.stats.redo" )){
-
+    browser()
     outdir = file.path(project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
     
     if (DS %in% c("predictions")) {
