@@ -214,7 +214,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
     if (DS %in% c("timeslice")) {
       O = NULL
       if (is.null(ret)) ret="mean"
-      outfile =  file.path( tslicedir, paste("bottom.timeslice", p$prediction.dyear, ret, "rdata", sep=".") )
+      outfile =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, ret, "rdata", sep=".") )
       if (file.exists( outfile ) ) load(outfile)
       return ( O )
     }
@@ -235,10 +235,10 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       V = P = NULL
     }
 
-    outfileP =  file.path( tslicedir, paste("bottom.timeslice", p$prediction.dyear, "mean", "rdata", sep=".") )
+    outfileP =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
     save( Op, file=outfileP, compress=T )
 
-    outfileV =  file.path( tslicedir, paste("bottom.timeslice", p$prediction.dyear, "sd", "rdata", sep=".") )
+    outfileV =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
     save( Ov, file=outfileV, compress=T )
 
     # warp the other grids .. copy original as *0
@@ -266,11 +266,11 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
       }
   
       tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", voi, p1$spatial.domain )
-      outfileP =  file.path( tslicedirp1, paste("bottom.timeslice", p$prediction.dyear, "mean", "rdata", sep=".") )
+      outfileP =  file.path( tslicedirp1, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
       O = Op
       save( O, file=outfileP, compress=T )
      
-      outfileV =  file.path( tslicedirp1, paste("bottom.timeslice", p$prediction.dyear, "sd", "rdata", sep=".") )
+      outfileV =  file.path( tslicedirp1, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
       O = Ov
       save( O, file=outfileV, compress=T )
     }
