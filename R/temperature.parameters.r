@@ -19,7 +19,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
-    p$bstats = c("tmean", "tsd", "wmin", "wmax", "tmin", "tmax", "amplitude", "thalfperiod" )
+    p$bstats = c("tmean", "tsd", "tmin", "tmax", "amplitude" )
   
     if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
     
@@ -32,7 +32,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$dyears = (c(1:p$nw)-1)  / p$nw # intervals of decimal years... fractional year breaks
     p$dyear_centre = p$dyears[ round(p$nw/2) ] + p$tres/2
  
-    p$prediction.dyear = 0.8 # used for creating timeslices .. needs to match the values in indicators.parameters()
+    p$prediction.dyear = lubridate::decimal_date( lubridate::ymd("0000/Sep/01")) # used for creating timeslices .. needs to match the values in indicators.parameters()
 
     # output timeslices for predictions
     tout = expand.grid( yr=p$yrs, dyear=1:p$nw, KEEP.OUT.ATTRS=FALSE )

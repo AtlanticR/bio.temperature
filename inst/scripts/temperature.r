@@ -69,17 +69,25 @@
     p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
 #   p = lbm( p=p, tasks=c( "stage0" ) )
 #   p = lbm( p=p, tasks=c( "continue" ) )      
-    p = lbm( p=p, tasks=c( "stage1" ) ) #  ~24 hrs 
-    p = lbm( p=p, tasks=c( "stage2" ) )
+    p = lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs 
+    p = lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs
     p = lbm( p=p, tasks=c( "stage3" ) )
     p = lbm( p=p, tasks=c( "save" ) )
 
+  # to view progress in terminal:
+  # watch -n 120 cat /home/jae/bio.data/bio.temperature/modelled/t/canada.east/lbm_current_status
 
-    # 3.  collect predictions from lbm and warp/break into sub-areas defined by p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) (in paramters() )
-    
+  # to view maps from an external R session:
+  # lbm(p=p, tasks="debug_pred_static_map", vindex=1)
+  # lbm(p=p, tasks="debug_pred_static_log_map", vindex=1)
+  # lbm(p=p, tasks="debug_pred_dynamic_map", vindex=1)
+  # lbm(p=p, tasks="debug_stats_map", vindex=1)
+
+
+    # 3.  collect predictions from lbm and warp/break into sub-areas defined by p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) 
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="predictions.redo" )
+    parallel.run( temperature.db, p=p, DS="predictions.redo" ) # 10 min
     
 
 
@@ -92,16 +100,17 @@
 
 
     # 5. some time slices at specific weeks for fast data lookup for modelling
+    p = make.list( list( yrs=p$tyears), Y=p )
     temperature.db( p=p,  DS="timeslice.redo" )
 
 
     # 6. complete statistics and warp/regrid database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
+    p = make.list( list( yrs=p$tyears), Y=p )
     temperature.db( p=p, DS="complete.redo")
 
 
   # 7. maps 
- 
-     # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
+    # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
     p = make.list( list( yrs=p$tyears), Y=p )
     for ( gr in p$spatial.domain.subareas ) {

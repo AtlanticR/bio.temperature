@@ -34,7 +34,7 @@
       return( "Completed maps")
     }
 
-    if ( type %in% c("annual", "amplitudes", "temperatures", "dyear.of.minima", "halfperiod", "tsd" ) ) {
+    if ( type %in% c("annual", "amplitudes", "temperatures", "tsd" ) ) {
 
       bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain , "bottom.predictions", "annual" )
       dir.create( bottomdir.maps, recursive=T, showWarnings=F )
@@ -75,28 +75,8 @@
             corners=p$corners, spatial.domain=p$spatial.domain   )
         }
 
-        if (type %in% c("dyear.of.minima", "annual") ) {
-          datacols = c("plon", "plat", "wmin")
-          datarange = seq(0,p$nw, length.out=50)
-          cols = color.code( "blue.yellow.blue", datarange )
-          outfn = paste( "dyear.temperature.minima", y, sep=".")
-          annot = y
-          map( xyz=H[,datacols], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
-            fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
-            corners=p$corners , spatial.domain=p$spatial.domain )
-        }
 
-        if (type %in% c("halfperiod", "annual") ) {
-          datacols = c("plon", "plat", "thp")
-          datarange = seq(0, p$nw, length.out=50)
-          cols = color.code( "blue.black", datarange )
-          outfn = paste( "halfperiod.length", y, sep=".")
-          annot = y
-          map( xyz=H[,datacols], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
-            fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
-            corners=p$corners , spatial.domain=p$spatial.domain )
-        }
-
+     
         if (type %in% c("tsd", "annual") ) {
           datacols = c("plon", "plat", "tsd")
           datarange = seq(0, 4, length.out=50)
@@ -110,7 +90,7 @@
 
       } }
 
-      if ( type %in% c("global", "amplitudes", "temperatures", "dyear.of.minima", "halfperiod", "tsd" ) ) {
+      if ( type %in% c("global", "amplitudes", "temperatures", "tsd" ) ) {
 
       bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain, "bottom.predictions", "global" )
       dir.create( bottomdir.maps, recursive=T, showWarnings=F )
@@ -139,28 +119,8 @@
             corners=p$corners , spatial.domain=p$spatial.domain )
         }
 
-        if (type %in% c("dyear.of.minima", "global") ) {
-          datacols = c("plon", "plat", "wmin.climatology")
-          datarange = seq(0,p$nw, length.out=50)
-          cols = color.code( "blue.yellow.blue", datarange )
-          outfn = paste( "dyear.temperature.minima", sep=".")
-          annot = paste("Dyear of temperature minima\n", sep="")
-          map( xyz=H[,datacols], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
-            fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
-            corners=p$corners , spatial.domain=p$spatial.domain )
-                 }
-
-        if (type %in% c("halfperiod", "global") ) {
-          datacols = c("plon", "plat", "thalfperiod.climatology")
-          datarange = seq(0, p$nw/2, length.out=50)
-          cols = color.code( "blue.black", datarange )
-          outfn = paste( "halfperiod.length", sep=".")
-          annot = paste("Length of half-period\n", sep="")
-          map( xyz=H[,datacols], cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
-            fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
-            corners=p$corners , spatial.domain=p$spatial.domain )
-        }
-        if (type %in% c("tsd", "global") ) {
+  
+       if (type %in% c("tsd", "global") ) {
           datacols = c("plon", "plat", "tsd.climatology")
           datarange = seq(0, 5, length.out=50)
           cols = color.code( "blue.black", datarange )
