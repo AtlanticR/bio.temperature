@@ -13,8 +13,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
   # no time records, just day/mon/year .. assume utc
 
   basedir = file.path( project.datadirectory("bio.temperature"), "data" )
-  loc.archive = file.path( basedir, "archive", "profiles", p$spatial.domain )
-  loc.basedata = file.path( basedir, "basedata", "rawdata", p$spatial.domain )
+  loc.archive = file.path( basedir, "archive", "profiles")
+  loc.basedata = file.path( basedir, "basedata", "rawdata" )
   dir.create( loc.basedata, recursive=T, showWarnings=F )
 
   # OSD data series variables of interest
@@ -207,10 +207,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
   if (DS %in% c( "profiles.annual.redo", "profiles.annual" ) ) {
     # read in annual depth profiles then extract bottom temperatures
 
-    if (p$spatial.domain %in% c("SSE", "snowcrab") ) p$spatial.domain="canada.east"  ## no point in having these as they are small subsets
-
     basedir = project.datadirectory("bio.temperature", "data" )
-    loc.profile = file.path( basedir, "basedata", "profiles", p$spatial.domain )
+    loc.profile = file.path( basedir, "basedata", "profiles" )
     dir.create( loc.profile, recursive=T, showWarnings=F )
 
     if (DS=="profiles.annual") {
@@ -356,10 +354,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
   if (DS %in% c( "bottom.annual", "bottom.annual.redo" ) ) {
     # extract bottom temperatures
 
-    if (p$spatial.domain %in% c("SSE", "snowcrab")  ) p$spatial.domain="canada.east"  ## no point in having these as they are small subsets
-
     basedir = project.datadirectory("bio.temperature", "data" )
-    loc.bottom = file.path( basedir, "basedata", "bottom", p$spatial.domain )
+    loc.bottom = file.path( basedir, "basedata", "bottom"  )
     dir.create( loc.bottom, recursive=T, showWarnings=F )
 
     if (DS=="bottom.annual") {
@@ -415,6 +411,49 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
         res = rbind( res, R )
       }
 
+      res = rename.df( res, "longitude", "lon")
+      res = rename.df( res, "latitude", "lat")
+      res = rename.df( res, "temperature", "t")
+      res = rename.df( res, "depth", "z")
+
+      tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y )
+
+      res = rbind( res, tne[,names(res)] )
+
+      res$date = as.Date( res$date ) # strip out time of day information
+      res$ddate = lubridate::decimal_date( res$date )
+      res$dyear = res$ddate - res$yr
+      # res$depth = NULL
+
+      igood = which( res$t >= -3 & res$t <= 25 )  ## 25 is a bit high but in case some shallow data
+      res = res[igood, ]
+
+      igood = which( res$lon >= p$corners$lon[1] & res$lon <= p$corners$lon[2]
+          &  res$lat >= p$corners$lat[1] & res$lat <= p$corners$lat[2] )
+      res = res[igood, ]
+
+      res = lonlat2planar( res, proj.type=p$internal.projection )
+
+      res = res[ which( is.finite( res$lon + res$lat + res$plon + res$plat ) ) , ]
+      ## ensure that inside each grid/time point
+      ## that there is only one point estimate .. taking medians
+      vars = c("z", "t", "salinity", "sigmat", "oxyml")
+      res$st = paste( res$ddate, res$plon, res$plat )
+
+      o = which( ( duplicated( res$st )) )
+      if (length(o)>0) {
+        dupids = unique( res$st[o] )
+        for ( dd in dupids ) {
+          e = which( res$st == dd )
+          keep = e[1]
+          drop = e[-1]
+          for (v in vars) res[keep, v] = median( res[e,v], na.rm=TRUE )
+          res$st[drop] = NA  # flag for deletion
+        }
+        res = res[ -which( is.na( res$st)) ,]
+      }
+      res$st = NULL
+
       Z = res
       fn = file.path( loc.bottom, paste("bottom", yt, "rdata", sep="."))
 			print (fn)
@@ -424,137 +463,6 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
   }
 
-
-  # -----------------
-
-  if (DS %in% c( "bottom.gridded", "bottom.gridded.redo" , "bottom.gridded.all" )){
-    # this is stored locally and not as an archive for speed and flexibility
-
-    basedir = project.datadirectory("bio.temperature", "data" )
-    loc.gridded = file.path( basedir, "basedata", "gridded", "bottom", p$spatial.domain )
-    dir.create( loc.gridded, recursive=T, showWarnings=F )
-
-    O = NULL
-    fnall = file.path( loc.gridded, paste( "bottom.allyears", "rdata", sep="." ) )
-
-    if (DS == "bottom.gridded.all" ) {
-      if (is.null(yr)) yr=p$tyears # defaults to tyears if no yr specified
-      if (file.exists(fnall)) {
-        load (fnall)
-      }
-      O = O[ which( O$yr %in% yr) , ]
-      return(O)
-    }
-
-    if (DS == "bottom.gridded.all.redo" ) {
-      for (y in p$tyears ) {
-          On = hydro.db(p=p, DS="bottom.gridded", yr=y)
-          if ( is.null( On) ) next()
-          O = rbind( O, On )
-        }
-      save( O, file=fnall, compress=TRUE )
-      if (!is.null(yr)) O = O[ which( O$yr %in% yr) , ]
-      return( fnall )
-    }
-
-
-    if (DS == "bottom.gridded" ) {
-			fng = file.path(  loc.gridded, paste( "bottom", yr, "rdata", sep="." ) )
-      tp = NULL
-			if (file.exists(fng) ) load(fng)
-      return ( tp )
-    }
-
-
-    if (DS == "bottom.gridded.redo" ) {
-
-      if ( is.null(ip)) {
-        if( exists( "nruns", p ) ) {
-          ip = 1:p$nruns
-        } else {
-          if ( !is.null(yr)) {
-            # if only selected years being re-run
-            ip = 1:length(yr)
-            p$runs = data.frame(yrs = yr)
-          } else {
-            ip = 1:length(p$tyears)
-            p$runs = data.frame(yrs = p$tyears)
-          }
-        }
-      }
-
-      if (exists( "libs", p)) RLibrary( p$libs )
-
-      for (iip in ip) {
-        y = p$runs[iip, "yrs"]
-        fn = file.path( loc.gridded , paste( "bottom", y, "rdata", sep="." ) )
-        print(fn)
-        tp = NULL
-        pcanada.east = p
-        pcanada.east$spatial.domain="canada.east"
-        # must "force" the following to read data from a larger spatial extent
-        # (as this is all that is currently stored) .. can used SSE specific
-        # but that increases storgage and data duplication .. no need
-
-        tp = bio.temperature::hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
-
-        if (is.null( tp) ) next()
-				tp = rename.df( tp, "longitude", "lon")
-        tp = rename.df( tp, "latitude", "lat")
-        tp = rename.df( tp, "temperature", "t")
-        tp = rename.df( tp, "depth", "z")
-
-        tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y )
-
-        tp = rbind( tp, tne[,names(tp)] )
-
-        tp$date = as.Date( tp$date ) # strip out time of day information
-        tp$ddate = lubridate::decimal_date( tp$date )
-        tp$dyear = tp$ddate - tp$yr
-				# tp$depth = NULL
-
-        igood = which( tp$t >= -3 & tp$t <= 25 )  ## 25 is a bit high but in case some shallow data
-        tp = tp[igood, ]
-
-        igood = which( tp$lon >= p$corners$lon[1] & tp$lon <= p$corners$lon[2]
-            &  tp$lat >= p$corners$lat[1] & tp$lat <= p$corners$lat[2] )
-        tp = tp[igood, ]
-
-        tp = lonlat2planar( tp, proj.type=p$internal.projection )
-
-        grid = spatial_grid(p=p, DS="lonlat.coords")
-				tp$lon = grid.internal( tp$lon, grid$lon )
-        tp$lat = grid.internal( tp$lat, grid$lat )
-
-        pgrid = spatial_grid(p=p, DS="planar.coords")
-				tp$plon = grid.internal( tp$plon, pgrid$plon )
-        tp$plat = grid.internal( tp$plat, pgrid$plat )
-
-				tp = tp[ which( is.finite( tp$lon + tp$lat + tp$plon + tp$plat ) ) , ]
-        ## ensure that inside each grid/time point
-        ## that there is only one point estimate .. taking medians
-        vars = c("z", "t", "salinity", "sigmat", "oxyml")
-        tp$st = paste( tp$ddate, tp$plon, tp$plat )
-
-        o = which( ( duplicated( tp$st )) )
-        if (length(o)>0) {
-          dupids = unique( tp$st[o] )
-          for ( dd in dupids ) {
-            e = which( tp$st == dd )
-            keep = e[1]
-            drop = e[-1]
-            for (v in vars) tp[keep, v] = median( tp[e,v], na.rm=TRUE )
-            tp$st[drop] = NA  # flag for deletion
-          }
-          tp = tp[ -which( is.na( tp$st)) ,]
-        }
-        tp$st = NULL
-
-				save( tp, file=fn, compress=T)
-      }
-    }
-    return ( "Completed rebuild"  )
-  }
 
 }
 
