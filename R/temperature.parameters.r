@@ -11,7 +11,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     if ( !exists("project.name", p) ) p$project.name="bio.temperature"
     if ( !exists("project.root", p) ) p$project.root = project.datadirectory( p$project.name )
 
-    if ( !exists("spatial.domain", p) ) p$spatial.domain = "canada.east.superhighres"
+    if ( !exists("spatial.domain", p) ) p$spatial.domain = "canada.east.highres" # superhighres result in memory overflow
     p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
     
     if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
