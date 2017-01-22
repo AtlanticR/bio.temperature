@@ -359,7 +359,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     dir.create( loc.bottom, recursive=T, showWarnings=F )
     
     fbAll = file.path( loc.bottom, "bottom.all.rdata" ) 
-    if (DS=="bottom.annual") {
+    if (DS=="bottom.all") {
       O = NULL
       if (file.exists(fbAll) ) load (fbAll)
       return(O)
