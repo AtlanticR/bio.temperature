@@ -11,7 +11,8 @@
   # ------------------------------
 
   if ( create.baseline.database ) {
-
+    # 1 data assimilation
+    
     if (historical.data.redo) {
       hydro.db( DS="osd.rawdata.allfiles.redo", p=p )   # redo whole data set (historical) from 1910 to 2010
       hydro.db( DS="osd.initial", p=p ) # 2008:2015
@@ -43,14 +44,6 @@
     p = bio.temperature::temperature.parameters( current.year=current.year )
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     
-    # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
-    p = make.list( list( yrs=p$tyears), Y=p )
-    # parallel.run( hydro.db, p=p, DS="bottom.gridded.redo" )
-    hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument:
-    # hydro.db( p=p, DS="bottom.gridded.redo", yr=p$newyear ) 
-    hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: 
-    # hydro.db( p=p, DS="bottom.gridded.all.redo", yr=p$newyear ) 
-
     # 2. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"

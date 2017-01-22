@@ -382,9 +382,12 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
     if (exists( "libs", p)) RLibrary( p$libs )
 
+    tne = hydro.db( p=p, DS="USSurvey_NEFSC" )
+
     dyears = (c(1:(p$nw+1))-1)  / p$nw # intervals of decimal years... fractional year breaks
 
     for (iy in ip) {
+
       yt = p$runs[iy, "yrs"]
       Y = bio.temperature::hydro.db( DS="profiles.annual", yr=yt, p=p )
       if (is.null(Y)) next()
@@ -395,66 +398,62 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
       Yid = cut( Y$dyear, breaks=dyears, include.lowest=T, ordered_result=TRUE )
       Y$id =  paste( round(Y$longitude,2), round(Y$latitude,2), Yid, sep="~" )
       ids =  sort( unique( Y$id ) )
-      res = copy.data.structure( Y)
+      Z = copy.data.structure( Y)
 
       for (i in ids ) {
-        Z = Y[ which( Y$id == i ), ]
-        jj = which( is.finite( Z$depth ) )
+        W = Y[ which( Y$id == i ), ]
+        jj = which( is.finite( W$depth ) )
         if ( length(jj) < 3 ) next()
-        zmax = max( Z$depth, na.rm=T ) - 10  # accept any depth within 10 m of the maximum depth
-        kk =  which( Z$depth >= zmax )
-        R = Z[ which.max( Z$depth ) , ]
-        R$temperature = median( Z$temperature[kk] , na.rm=T )
-        R$salinity = median( Z$salinity[kk] , na.rm=T )
-        R$sigmat = median( Z$sigmat[kk] , na.rm=T )
-        R$oxyml = median( Z$oxyml[kk] , na.rm=T )
-        res = rbind( res, R )
+        Wmax = max( W$depth, na.rm=T ) - 10  # accept any depth within 10 m of the maximum depth
+        kk =  which( W$depth >= Wmax )
+        R = W[ which.max( W$depth ) , ]
+        R$temperature = median( W$temperature[kk] , na.rm=T )
+        R$salinity = median( W$salinity[kk] , na.rm=T )
+        R$sigmat = median( W$sigmat[kk] , na.rm=T )
+        R$oxyml = median( W$oxyml[kk] , na.rm=T )
+        Z = rbind( Z, R )
       }
 
-      res = rename.df( res, "longitude", "lon")
-      res = rename.df( res, "latitude", "lat")
-      res = rename.df( res, "temperature", "t")
-      res = rename.df( res, "depth", "z")
+      Z = rename.df( Z, "longitude", "lon")
+      Z = rename.df( Z, "latitude", "lat")
+      Z = rename.df( Z, "temperature", "t")
+      Z = rename.df( Z, "depth", "z")
 
-      tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y )
+      utne = which( tne$yr== yt)
+      if ( length(utne) > 0) Z = rbind( Z, tne[,names(Z)] )
 
-      res = rbind( res, tne[,names(res)] )
+      Z$date = as.Date( Z$date ) # strip out time of day information
+      Z$ddate = lubridate::decimal_date( Z$date )
+      Z$dyear = Z$ddate - Z$yr
+      Z = lonlat2planar( Z, proj.type=p$internal.projection )
 
-      res$date = as.Date( res$date ) # strip out time of day information
-      res$ddate = lubridate::decimal_date( res$date )
-      res$dyear = res$ddate - res$yr
-      # res$depth = NULL
+      igood = which( Z$t >= -3 & Z$t <= 25 )  ## 25 is a bit high but in case some shallow data
+      Z = Z[igood, ]
 
-      igood = which( res$t >= -3 & res$t <= 25 )  ## 25 is a bit high but in case some shallow data
-      res = res[igood, ]
+      igood = which( Z$lon >= p$corners$lon[1] & Z$lon <= p$corners$lon[2]
+          &  Z$lat >= p$corners$lat[1] & Z$lat <= p$corners$lat[2] )
+      Z = Z[igood, ]
 
-      igood = which( res$lon >= p$corners$lon[1] & res$lon <= p$corners$lon[2]
-          &  res$lat >= p$corners$lat[1] & res$lat <= p$corners$lat[2] )
-      res = res[igood, ]
 
-      res = lonlat2planar( res, proj.type=p$internal.projection )
-
-      res = res[ which( is.finite( res$lon + res$lat + res$plon + res$plat ) ) , ]
+      Z = Z[ which( is.finite( Z$lon + Z$lat + Z$plon + Z$plat ) ) , ]
       ## ensure that inside each grid/time point
       ## that there is only one point estimate .. taking medians
       vars = c("z", "t", "salinity", "sigmat", "oxyml")
-      res$st = paste( res$ddate, res$plon, res$plat )
+      Z$st = paste( Z$ddate, Z$plon, Z$plat )
 
-      o = which( ( duplicated( res$st )) )
+      o = which( ( duplicated( Z$st )) )
       if (length(o)>0) {
-        dupids = unique( res$st[o] )
+        dupids = unique( Z$st[o] )
         for ( dd in dupids ) {
-          e = which( res$st == dd )
+          e = which( Z$st == dd )
           keep = e[1]
           drop = e[-1]
-          for (v in vars) res[keep, v] = median( res[e,v], na.rm=TRUE )
-          res$st[drop] = NA  # flag for deletion
+          for (v in vars) Z[keep, v] = median( Z[e,v], na.rm=TRUE )
+          Z$st[drop] = NA  # flag for deletion
         }
-        res = res[ -which( is.na( res$st)) ,]
+        Z = Z[ -which( is.na( Z$st)) ,]
       }
-      res$st = NULL
-
-      Z = res
+      Z$st = NULL
       fn = file.path( loc.bottom, paste("bottom", yt, "rdata", sep="."))
 			print (fn)
       save( Z, file=fn, compress=T)
