@@ -6,7 +6,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
   
   if (DS=="lbm.inputs") {
 
-    B = hydro.db( p=p, DS="bottom.gridded.all"  ) # might be better add all data instead of the gridded ... gridding is just to make things faster
+    B = hydro.db( p=p, DS="bottom.all"  ) 
     B$tiyr = lubridate::decimal_date ( B$date )
 
     # globally remove all unrealistic data

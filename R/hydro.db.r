@@ -351,12 +351,19 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
   # ----------------
 
-  if (DS %in% c( "bottom.annual", "bottom.annual.redo" ) ) {
+  if (DS %in% c( "bottom.annual", "bottom.annual.redo", "bottom.all" ) ) {
     # extract bottom temperatures
 
     basedir = project.datadirectory("bio.temperature", "data" )
     loc.bottom = file.path( basedir, "basedata", "bottom"  )
     dir.create( loc.bottom, recursive=T, showWarnings=F )
+    
+    fbAll = file.path( loc.bottom, "bottom.all.rdata" ) 
+    if (DS=="bottom.annual") {
+      O = NULL
+      if (file.exists(fbAll) ) load (fbAll)
+      return(O)
+    }
 
     if (DS=="bottom.annual") {
       fn = file.path( loc.bottom, paste("bottom", yr, "rdata", sep="."))
@@ -458,6 +465,14 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 			print (fn)
       save( Z, file=fn, compress=T)
     }
+
+    O = NULL
+    for ( yr in p$tyears ) {
+      o = hydro.db( p=p, DS="bottom.annual", yr=yr )
+      if (!is.null(o)) O = rbind(O, o)
+    }
+    save(O, file=fbAll, compress=TRUE)
+
     return ("Completed")
 
   }
