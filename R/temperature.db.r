@@ -19,13 +19,13 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
     keep = which( B$z >=  1 ) # ignore very shallow areas ..
     if (length(keep) > 0 ) B = B[ keep, ]
 
-    varstokeep = unique( c( p$varnames, p$variables$LOCS, p$variables$TIME ) )
+    varstokeep = unique( c( p$variables$LOCS, p$variables$TIME, p$variables$COV ) )
     B = B[,varstokeep]
     
     # default output grid
     Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
     coords = p$variables$LOCS
-    covars = setdiff( p$varnames, p$variables$LOCS )
+    covars = p$variables$COV 
     if (length(covars)==1) {
       covs = list( Bout[,covars] )
       names(covs) = covars
