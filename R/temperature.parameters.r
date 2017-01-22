@@ -27,7 +27,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$nw = 10 # number of intervals in time within a year
     p$nt = p$nw*p$ny # must specify, else assumed = 1
     p$tres = 1/ p$nw # time resolution
-
     
     p$dyears = (c(1:p$nw)-1)  / p$nw # intervals of decimal years... fractional year breaks
     p$dyear_centre = p$dyears[ round(p$nw/2) ] + p$tres/2
@@ -52,7 +51,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$boundary = TRUE 
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
-    p$lbm_nonconvexhull_alpha = 30  # radius in distance units (km) to use for determining boundaries
+    p$lbm_nonconvexhull_alpha = 28  # radius in distance units (km) to use for determining boundaries
     p$lbm_noise = 0.1  # distance units for eps noise to permit mesh gen for boundaries
     p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
     
@@ -65,7 +64,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
   
     p$n.min = 250 # n.min/n.max changes with resolution must be more than the number of knots/edf
     # min number of data points req before attempting to model timeseries in a localized space
-    p$n.max = 7500 # numerical time/memory constraint -- anything larger takes too much time
+    p$n.max = 6000 # numerical time/memory constraint -- anything larger takes too much time
     p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5 )  # 
 
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
