@@ -7,7 +7,7 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
   if (DS=="lbm.inputs") {
 
     B = hydro.db( p=p, DS="bottom.all"  ) 
-    B = B[ whichB$yr %in% p$yrs ]
+    B = B[ which(B$yr %in% p$yrs), ]
     B$tiyr = lubridate::decimal_date ( B$date )
 
     # globally remove all unrealistic data
