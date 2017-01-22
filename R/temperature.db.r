@@ -1,5 +1,5 @@
 
-temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", voi="t" ) {
+temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", voi="t" ) {
 
   # over-ride default dependent variable name if it exists
   if (exists("variables",p)) if(exists("Y", p$variables)) voi=p$variables$Y
@@ -7,6 +7,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, varnames=NULL, yr=NULL, r
   if (DS=="lbm.inputs") {
 
     B = hydro.db( p=p, DS="bottom.all"  ) 
+    B = B[ whichB$yr %in% p$yrs ]
     B$tiyr = lubridate::decimal_date ( B$date )
 
     # globally remove all unrealistic data

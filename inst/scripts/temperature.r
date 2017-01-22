@@ -40,9 +40,6 @@
   # ------------------------------
 
   if (create.interpolated.results.lbm ) {
-
-    p = bio.temperature::temperature.parameters( current.year=current.year )
-    p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     
     # 2. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
