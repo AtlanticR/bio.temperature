@@ -52,8 +52,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$boundary = TRUE 
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
-    p$lbm_nonconvexhull_alpha = 20  # radius in distance units (km) to use for determining boundaries
-    p$lbm_noise = 0.001  # distance units for eps noise to permit mesh gen for boundaries
+    p$lbm_nonconvexhull_alpha = 25  # radius in distance units (km) to use for determining boundaries
+    p$lbm_noise = 0.1  # distance units for eps noise to permit mesh gen for boundaries
     p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
     
     p$lbm_rsquared_threshold = 0.25 # lower threshold
