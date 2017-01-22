@@ -16,9 +16,11 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
     TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
     keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
     if (length(keep) > 0 ) B = B[ keep, ]
-    
     keep = which( B$z >=  1 ) # ignore very shallow areas ..
     if (length(keep) > 0 ) B = B[ keep, ]
+
+    varstokeep = unique( c( p$varnames, p$variables$LOCS, p$variables$TIME ) )
+    B = B[,varstokeep]
     
     # default output grid
     Bout = bathymetry.db( p, DS="baseline", varnames=p$varnames )
