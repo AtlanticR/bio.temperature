@@ -49,7 +49,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$storage.backend="bigmemory.ram"
     if (!exists("clusters", p)) p$clusters = rep("localhost", detectCores() )
 
-    p$boundary = TRUE 
+    p$boundary = FALSE
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
     p$lbm_nonconvexhull_alpha = 28  # radius in distance units (km) to use for determining boundaries
     p$lbm_noise = 0.1  # distance units for eps noise to permit mesh gen for boundaries
