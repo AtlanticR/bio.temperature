@@ -14,7 +14,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     if ( !exists("spatial.domain", p) ) p$spatial.domain = "canada.east" # canada.east.highres and canada.east.superhighres result in memory overflow
     p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
     
-    if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
+    if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
   
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
