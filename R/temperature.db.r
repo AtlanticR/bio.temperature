@@ -205,6 +205,38 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
 
   # -----------------
 
+  if (DS %in% c("spatial.annual.seasonal", "spatial.annual.seasonal.redo") ) {
+    #\\ spatial, temporal (annual and seasonal) .. means only
+    #\\ copy in array format for domain/resolution of interest for faster lookups
+    outdir = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p$spatial.domain )
+    dir.create(outdir, recursive=T, showWarnings=F)
+
+    outfile =  file.path( outdir, "temperature.spatial.annual.seasonal.rdata" )
+
+    if ( DS=="spatial.annual.seasonal" ) {
+      O = NULL
+      if (file.exists(outfile)) load( outfile )
+      return (O)
+    }
+
+    grids = unique( c( p$spatial.domain.subareas, p$spatial.domain) )
+    for (gr in grids ) {
+      print(gr)
+      p1 = spatial_parameters( type=gr ) #target projection
+      nlocs = nrow( bathymetry.db(p=p, DS="baseline"))
+      O = array( NA, dim=c(nlocs, p$ny, p$nw ) )
+      for ( y in 1:p$ny ) {
+        O[,y,] = temperature.db( p=p, DS="predictions", yr=p$yrs[y], ret="mean" )
+      }
+      save (O, file=outfile, compress=T )
+    } 
+    return( outfile )
+  
+  }
+
+
+  # -----------------
+
 
   if (DS %in% c(  "timeslice", "timeslice.redo" )){
 
@@ -223,59 +255,32 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
     }
 
     p0 = p  # the originating parameters
-    L0 = bathymetry.db( p=p0, DS="baseline" )
-    L0i = lbm::array_map( "xy->2", L0, gridparams=p0$gridparams )
+    grids = unique( c( p$spatial.domain.subareas , p$spatial.domain) )
 
-    Op = matrix(NA, ncol=p$ny, nrow=nrow(L0) )
-    Ov = matrix(NA, ncol=p$ny, nrow=nrow(L0) )
-    
-    for ( r in 1:p$ny ) {
-      print ( paste("Year:", p$tyears[r])  )
-      V = temperature.db( p=p, DS="predictions", yr=p$tyears[r], ret="sd"  )
-      if (!is.null(V)) Ov[,r] = V[,dyear_index]
-      P = temperature.db( p=p, DS="predictions", yr=p$tyears[r], ret="mean"  )
-      if (!is.null(P))  Op[,r] = P[,dyear_index]
-      V = P = NULL
-    }
-
-    outfileP =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
-    save( Op, file=outfileP, compress=T )
-
-    outfileV =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
-    save( Ov, file=outfileV, compress=T )
-
-    # warp the other grids .. copy original as *0
-    Op0 = Op
-    Ov0 = Ov
-  
-    #using fields
-    grids = setdiff( unique( p0$spatial.domain.subareas ), p0$spatial.domain )
     for (gr in grids ) {
       print(gr)
       p1 = spatial_parameters( type=gr ) #target projection
-      L1 = bathymetry.db( p=p1, DS="baseline" )
-      L1i = lbm::array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
-      L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
-      L1$plon_1 = L1$plon # store original coords
-      L1$plat_1 = L1$plat
-      L1 = lonlat2planar( L1, proj.type=p0$internal.crs )
-      p1$wght = fields::setup.image.smooth( 
-        nrow=p1$nplons, ncol=p1$nplats, dx=p1$pres, dy=p1$pres,
-        theta=p1$pres, xwidth=4*p1$pres, ywidth=4*p1$pres )
-      Op = Ov = matrix(NA, ncol=p$ny, nrow=nrow(L1) )
-      for (iy in 1:p$ny) {
-        Op[,iy] = spatial_warp( Op0[,iy], L0, L1, p0, p1, "fast", L0i, L1i )
-        Ov[,iy] = spatial_warp( Ov0[,iy], L0, L1, p0, p1, "fast", L0i, L1i )
+      tslicedir = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain )
+      nlocs = nrow( bathymetry.db(p=p1, DS="baseline"))
+      O = matrix(NA, ncol=p$ny, nrow=nlocs)
+      for ( r in 1:p$ny ) {
+        P = temperature.db( p=p, DS="predictions", yr=p$tyears[r], ret="mean"  )
+        if (!is.null(P))  O[,r] = P[,dyear_index]
+        P = NULL
       }
-  
-      tslicedirp1 = file.path( project.datadirectory("bio.temperature"),  "modelled", voi, p1$spatial.domain )
-      outfileP =  file.path( tslicedirp1, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
-      O = Op
+      outfileP =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
       save( O, file=outfileP, compress=T )
-     
-      outfileV =  file.path( tslicedirp1, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
-      O = Ov
+      O = NULL 
+      
+      O = matrix(NA, ncol=p$ny, nrow=nlocs)
+      for ( r in 1:p$ny ) {
+        V = temperature.db( p=p, DS="predictions", yr=p$tyears[r], ret="sd"  )
+        if (!is.null(V)) O[,r] = V[,dyear_index]
+        V = NULL
+      }
+      outfileV =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "sd", "rdata", sep=".") )
       save( O, file=outfileV, compress=T )
+      O = NULL
     }
 
     return ("Completed")

@@ -11,7 +11,7 @@
   # ------------------------------
 
   if ( create.baseline.database ) {
-    # 1 data assimilation
+    # 0 data assimilation
     
     if (historical.data.redo) {
       hydro.db( DS="osd.rawdata.allfiles.redo", p=p )   # redo whole data set (historical) from 1910 to 2010
@@ -41,7 +41,7 @@
 
   if (create.interpolated.results.lbm ) {
     
-    # 2. lbm interpolations assuming some seasonal pattern
+    # 1. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
@@ -74,23 +74,26 @@
   # lbm(p=p, tasks="debug_stats_map", vindex=1)
 
 
-    # 3.  collect predictions from lbm and warp/break into sub-areas defined by p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) 
+    # 2.  collect predictions from lbm and warp/break into sub-areas defined by p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) 
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
     parallel.run( temperature.db, p=p, DS="predictions.redo" ) # 10 min
     
-
     temperature.db( p=p, DS="lbm.stats.redo" ) # warp to sub grids
 
 
-    # 4. extract relevant statistics 
+    # 3. extract relevant statistics 
     # or parallel runs: ~ 1 to 2 GB / process .. ~ 1 hr
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
     parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
 
 
-    # 5. some time slices at specific weeks for fast data lookup for modelling
+    # 4. all time slices in array format
+    temperature.db( p=p,  DS="spatial.annual.seasonal.redo" )
+
+
+    # 5. time slice at prediction time of year
     p = make.list( list( yrs=p$tyears), Y=p )
     temperature.db( p=p,  DS="timeslice.redo" )
 
