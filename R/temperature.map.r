@@ -40,7 +40,7 @@ temperature.map = function( ip=NULL, p=NULL, type="annual", vname=NULL ) {
     for (iy in ip ) {
       y = p$runs[iy, "yrs"]
       print(y)
-      H = temperature.db( p=p, DS="bottom.statistics.annual", year=y, ret=vname )
+      H = temperature.db( p=p, DS="bottom.statistics.annual", yr=y, ret=vname )
 
       if (is.null(H)) next ()
 

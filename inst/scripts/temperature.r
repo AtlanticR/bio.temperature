@@ -47,9 +47,6 @@
 
     # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
     
-    current.year=2016
-    
-    p = bio.temperature::temperature.parameters( current.year=current.year )
     # p$lbm_local_modelengine = "twostep"
     p$lbm_local_modelengine = "gam"
 
@@ -83,10 +80,10 @@
 
 
     # 3. extract relevant statistics 
-    # or parallel runs: ~ 1 to 2 GB / process .. ~ 1 hr
+    # or parallel runs: ~ 1 to 2 GB / process .. ~ 4+ hr
     p$clusters = rep("localhost", detectCores() )
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
+    parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" ) 
 
 
     # 4. all time slices in array format
