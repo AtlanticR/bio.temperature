@@ -221,14 +221,17 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
 
     grids = unique( c( p$spatial.domain.subareas, p$spatial.domain) )
     for (gr in grids ) {
-      print(gr)
+      #  print(gr)
       p1 = spatial_parameters( type=gr ) #target projection
-      nlocs = nrow( bathymetry.db(p=p, DS="baseline"))
+      nlocs = nrow( bathymetry.db(p=p1, DS="baseline"))
       O = array( NA, dim=c(nlocs, p$ny, p$nw ) )
       for ( y in 1:p$ny ) {
-        O[,y,] = temperature.db( p=p, DS="predictions", yr=p$yrs[y], ret="mean" )
+        O[,y,] = temperature.db( p=p1, DS="predictions", yr=p$yrs[y], ret="mean" )
       }
+      outdir = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain )
+      outfile =  file.path( outdir, "temperature.spatial.annual.seasonal.rdata" )
       save (O, file=outfile, compress=T )
+      print(outfile)
     } 
     return( outfile )
   
@@ -258,23 +261,25 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
     grids = unique( c( p$spatial.domain.subareas , p$spatial.domain) )
 
     for (gr in grids ) {
-      print(gr)
+      # print(gr)
       p1 = spatial_parameters( type=gr ) #target projection
       tslicedir = file.path( project.datadirectory("bio.temperature"), "modelled", voi, p1$spatial.domain )
       nlocs = nrow( bathymetry.db(p=p1, DS="baseline"))
       O = matrix(NA, ncol=p$ny, nrow=nlocs)
       for ( r in 1:p$ny ) {
-        P = temperature.db( p=p, DS="predictions", yr=p$tyears[r], ret="mean"  )
+        P = temperature.db( p=p1, DS="predictions", yr=p$tyears[r], ret="mean"  )
         if (!is.null(P))  O[,r] = P[,dyear_index]
         P = NULL
       }
       outfileP =  file.path( tslicedir, paste("bottom.timeslice", dyear_index, "mean", "rdata", sep=".") )
       save( O, file=outfileP, compress=T )
+      print(outfileP)
+
       O = NULL 
       
       O = matrix(NA, ncol=p$ny, nrow=nlocs)
       for ( r in 1:p$ny ) {
-        V = temperature.db( p=p, DS="predictions", yr=p$tyears[r], ret="sd"  )
+        V = temperature.db( p=p1, DS="predictions", yr=p$tyears[r], ret="sd"  )
         if (!is.null(V)) O[,r] = V[,dyear_index]
         V = NULL
       }
