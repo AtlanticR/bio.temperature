@@ -2,7 +2,6 @@
 temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
   if ( DS=="default") {
-    if ( is.null( current.year )) current.year=lubridate::year(lubridate::now())
     if ( is.null( p ) ) p=list()
 
     p$libs = RLibrary( "lubridate", "gstat", "sp", "rgdal", "parallel", "mgcv", "raster", "fields",
@@ -16,6 +15,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     
     if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE.mpa", "SSE", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
   
+    if ( is.null( current.year )) current.year=lubridate::year(lubridate::now())
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
@@ -51,8 +51,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     p$boundary = FALSE
     p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
-    p$lbm_nonconvexhull_alpha = 28  # radius in distance units (km) to use for determining boundaries
-    p$lbm_noise = 0.1  # distance units for eps noise to permit mesh gen for boundaries
+    p$lbm_eps = 0.1  # distance units for eps noise to permit mesh gen for boundaries
     p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
     
     p$lbm_rsquared_threshold = 0.25 # lower threshold
