@@ -37,7 +37,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     tout = expand.grid( yr=p$yrs, dyear=1:p$nw, KEEP.OUT.ATTRS=FALSE )
     tout$tiyr = tout$yr + tout$dyear/p$nw - p$tres/2 # mid-points
     tout = tout[ order(tout$tiyr), ]
-    p$prediction.ts = tout$tiyr
+    p$prediction.ts = tout$tiyr   # predictions at these time values (decimal-year)
 
     return(p)
   }
