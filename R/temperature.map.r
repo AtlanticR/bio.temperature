@@ -1,5 +1,5 @@
 
-temperature.map = function( ip=NULL, p=NULL, type="all", vname=NULL ) {
+temperature.map = function( ip=NULL, p=NULL, type="all" ) {
 
   # ip is the first parameter passed in the parallel mode
   if (exists( "libs", p)) RLibrary( p$libs )
@@ -11,7 +11,7 @@ temperature.map = function( ip=NULL, p=NULL, type="all", vname=NULL ) {
 
 
   if ( type=="all" ) {
-
+    # run everything below
     allgrids = unique(c( p$spatial.domain.subareas, p$spatial.domain) )
     for ( gr in allgrids ) {
       print (gr)
@@ -20,9 +20,7 @@ temperature.map = function( ip=NULL, p=NULL, type="all", vname=NULL ) {
       temperature.map( p=p1, type="lbm.stats" ) # no parallel option .. just a few
       temperature.map( p=p1, type="climatology" ) # no parallel option .. just a few
       parallel.run( temperature.map, p=p1, type="seasonal" ) # all seasonal predicted means
-      for ( bs in p$bstats ) {
-        parallel.run( temperature.map, p=p1, type="annual", vname=bs ) # bottom.statistics.annual
-      }
+      parallel.run( temperature.map, p=p1, type="annual" ) # bottom.statistics.annual
     }
 
   }
@@ -58,52 +56,53 @@ temperature.map = function( ip=NULL, p=NULL, type="all", vname=NULL ) {
   if ( type %in% c("annual" ) ) {
     bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain , "bottom.predictions", "annual" )
     dir.create( bottomdir.maps, recursive=T, showWarnings=F )
-    for (iy in ip ) {
-      y = p$runs[iy, "yrs"]
-      print(y)
-      H = temperature.db( p=p, DS="bottom.statistics.annual", yr=y, ret=vname )
+    for ( vname in p$bstats ) {
+      for (iy in ip ) {
+        y = p$runs[iy, "yrs"]
+        print(y)
+        H = temperature.db( p=p, DS="bottom.statistics.annual", yr=y, ret=vname )
 
-      if (is.null(H)) next ()
+        if (is.null(H)) next ()
 
-      if (vname %in% c("tmean") ) {
-        datarange = seq(-0.5, 10, length.out=100)
-        cols = color.code( "blue.black", datarange )
-        outfn = paste( "temperatures.bottom", y, sep=".")
-        annot = y
-      } 
+        if (vname %in% c("tmean") ) {
+          datarange = seq(-0.5, 10, length.out=100)
+          cols = color.code( "blue.black", datarange )
+          outfn = paste( "temperatures.bottom", y, sep=".")
+          annot = y
+        } 
 
-      if (vname %in% c("tsd") ) {
-        datarange = seq(0.001, 6, length.out=100)
-        cols = color.code( "blue.black", datarange )
-        outfn = paste( "temperatures.bottom.sd", y, sep=".")
-        annot = y
-      } 
-   
-      if (vname %in% c("tmin") ) {
-        datarange = seq(-0.5, 10, length.out=100)
-        cols = color.code( "blue.black", datarange )
-        outfn = paste( "temperatures.bottom.min", y, sep=".")
-        annot = y
+        if (vname %in% c("tsd") ) {
+          datarange = seq(0.001, 6, length.out=100)
+          cols = color.code( "blue.black", datarange )
+          outfn = paste( "temperatures.bottom.sd", y, sep=".")
+          annot = y
+        } 
+     
+        if (vname %in% c("tmin") ) {
+          datarange = seq(-0.5, 10, length.out=100)
+          cols = color.code( "blue.black", datarange )
+          outfn = paste( "temperatures.bottom.min", y, sep=".")
+          annot = y
+        }
+     
+        if (vname %in% c("tmax") ) {
+          datarange = seq(-0.5, 10, length.out=100)
+          cols = color.code( "blue.black", datarange )
+          outfn = paste( "temperatures.bottom.max", y, sep=".")
+          annot = y
+        }
+
+        if (vname %in% c("amplitude") ) {
+          datarange = seq(0,5, length.out=100)
+          cols = color.code( "blue.black", datarange )
+          outfn = paste( "temperatures.bottom.amplitude", y, sep=".")
+          annot = y
+        }
+
+        bio.spacetime::map( xyz=cbind(loc, H[,iy]), cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
+          fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
+          corners=p$corners, spatial.domain=p$spatial.domain ) 
       }
-   
-      if (vname %in% c("tmax") ) {
-        datarange = seq(-0.5, 10, length.out=100)
-        cols = color.code( "blue.black", datarange )
-        outfn = paste( "temperatures.bottom.max", y, sep=".")
-        annot = y
-      }
-
-      if (vname %in% c("amplitude") ) {
-        datarange = seq(0,5, length.out=100)
-        cols = color.code( "blue.black", datarange )
-        outfn = paste( "temperatures.bottom.amplitude", y, sep=".")
-        annot = y
-      }
-
-      bio.spacetime::map( xyz=cbind(loc, H[,iy]), cfa.regions=F, depthcontours=T, pts=NULL, annot=annot,
-        fn=outfn, loc=bottomdir.maps, at=datarange , col.regions=cols,
-        corners=p$corners, spatial.domain=p$spatial.domain ) 
-
     } 
   }
 
