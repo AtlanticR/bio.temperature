@@ -62,7 +62,7 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
     # downscale and warp from p(0) -> p1
 
     for ( r in ip ) {
-      print (r)
+      # print (r)
       yr = p$runs[r, "yrs"]
       # default domain
       PP0 = lbm_db( p=p, DS="lbm.prediction", yr=yr, ret="mean")
