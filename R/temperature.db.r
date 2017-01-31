@@ -168,12 +168,10 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
         O[,iy,1] = c(apply( P*W, 1, sum, na.rm=T))
         O[,iy,2]  = c(apply( (P-rowMeans(P))^2*W, 1, sum, na.rm=T )) # weighted seasonal mean sums of squares
         W = NULL
-  			O[,iy,3] = c(apply( P, 1, quantile, probs=0.005, na.rm=TRUE ))
-        O[,iy,4] = c(apply( P, 1, quantile, probs=0.995, na.rm=TRUE ))
+  			O[,iy,3] = c(apply( P, 1, quantile, probs=p$lbm_quantile_bounds[1], na.rm=TRUE ))
+        O[,iy,4] = c(apply( P, 1, quantile, probs=p$lbm_quantile_bounds[2], na.rm=TRUE ))
   			P = NULL
-        O[,iy,5] = O[,iy,4] - O[,iy,3]  # approximate as sinusoid can span 2 yrs .. max amplitude
-  			# half-period .. also approximate as sinusoid can also span 2 yrs
-  			# sin tranf required to make circular and then take difference and rescale
+        O[,iy,5] = O[,iy,4] - O[,iy,3] 
       }
 
       # save sp-time matrix for each stat .. easier to load into lbm this way   

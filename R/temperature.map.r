@@ -1,5 +1,5 @@
 
-temperature.map = function( ip=NULL, p=NULL, type="annual", vname=NULL ) {
+temperature.map = function( ip=NULL, p=NULL, type="all", vname=NULL ) {
 
   # ip is the first parameter passed in the parallel mode
   if (exists( "libs", p)) RLibrary( p$libs )
@@ -8,6 +8,40 @@ temperature.map = function( ip=NULL, p=NULL, type="annual", vname=NULL ) {
   loc = bathymetry.db(p=p, DS="baseline" )
 
 	require( lattice )
+
+
+  if ( type=="all" ) {
+
+    for ( gr in p$spatial.domain.subareas ) {
+      print (gr)
+      p1 = spatial_parameters(  p=p, type= gr )
+      p1 = make.list( list( yrs=p1$yrs), Y=p1 )
+      temperature.map( p=p1, type="lbm.stats" ) # no parallel option .. just a few
+      temperature.map( p=p1, type="climatology" ) # no parallel option .. just a few
+    }
+
+    # all seasonal predicted means
+    for ( gr in p$spatial.domain.subareas ) {
+      print (gr)
+      p1 = spatial_parameters( p=p, type= gr )
+      p1 = make.list( list( yrs=p1$yrs), Y=p1 )
+      parallel.run( temperature.map, p=p1, type="seasonal" )
+    }
+
+    # bottom.statistics.annual
+    for ( gr in p$spatial.domain.subareas ) {
+      print (gr)
+      p1 = spatial_parameters( p=p, type= gr )
+      p1 = make.list( list( yrs=p1$yrs), Y=p1 )
+      for ( bs in p$bstats )
+        parallel.run( temperature.map, p=p1, type="annual", vname=bs )
+      }
+    }
+
+  }
+
+  # -----------------------
+
 
   if ( type=="seasonal" ) {
 

@@ -101,39 +101,14 @@
 
 
   # 7. maps 
+    current.year=2016
+    p = bio.temperature::temperature.parameters( current.year=current.year )
+    p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
-    # basic stats and climatologies
-    current.year=2016
-    p0 = bio.temperature::temperature.parameters( current.year=current.year )
-    p0 = bio.temperature::temperature.parameters( DS="lbm", p=p0 )
 
-    for ( gr in p0$spatial.domain.subareas ) {
-      print (gr)
-      p1 = spatial_parameters(  p=p1, type= gr )
-      p1 = make.list( list( yrs=p0$tyears), Y=p1 )
-      temperature.map( p=p1, type="lbm.stats" ) # no parallel option .. just a few
-      temperature.map( p=p1, type="climatology" ) # no parallel option .. just a few
-    }
+    temperature.map( p=p, DS="all")
 
-    # all seasonal predicted means
-    for ( gr in p0$spatial.domain.subareas ) {
-      print (gr)
-      p1 = spatial_parameters( p=p1, type= gr )
-      p1 = make.list( list( yrs=p0$tyears), Y=p1 )
-      parallel.run( temperature.map, p=p1, type="seasonal" )
-    }
-
-    # bottom.statistics.annual
-    for ( gr in p0$spatial.domain.subareas ) {
-      print (gr)
-      p1 = spatial_parameters( p=p1, type= gr )
-      p1 = make.list( list( yrs=p0$tyears), Y=p1 )
-      for ( bs in p0$bstats )
-        parallel.run( temperature.map, p=p1, type="annual", vname=bs )
-      }
-    }
-    
 
   # finished 
 
