@@ -15,7 +15,7 @@ temperature.map = function( ip=NULL, p=NULL, DS="all" ) {
     allgrids = unique(c( p$spatial.domain.subareas, p$spatial.domain) )
     for ( gr in allgrids ) {
       print (gr)
-      p1 = spatial_parameters(  p=p, DS= gr )
+      p1 = spatial_parameters(  p=p, type= gr )
       p1 = make.list( list( yrs=p1$yrs), Y=p1 )
       temperature.map( p=p1, DS="lbm.stats" ) # no parallel option .. just a few
       temperature.map( p=p1, DS="climatology" ) # no parallel option .. just a few
