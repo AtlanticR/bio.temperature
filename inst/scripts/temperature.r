@@ -107,7 +107,7 @@
     # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
 
-    temperature.map( p=p, DS="all")
+    temperature.map( p=p )
 
 
   # finished 
