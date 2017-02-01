@@ -1,5 +1,5 @@
 
-temperature.map = function( ip=NULL, p=NULL, type="all" ) {
+temperature.map = function( ip=NULL, p=NULL, DS="all" ) {
 
   # ip is the first parameter passed in the parallel mode
   if (exists( "libs", p)) RLibrary( p$libs )
@@ -10,17 +10,17 @@ temperature.map = function( ip=NULL, p=NULL, type="all" ) {
 	require( lattice )
 
 
-  if ( type=="all" ) {
+  if ( DS=="all" ) {
     # run everything below
     allgrids = unique(c( p$spatial.domain.subareas, p$spatial.domain) )
     for ( gr in allgrids ) {
       print (gr)
-      p1 = spatial_parameters(  p=p, type= gr )
+      p1 = spatial_parameters(  p=p, DS= gr )
       p1 = make.list( list( yrs=p1$yrs), Y=p1 )
-      temperature.map( p=p1, type="lbm.stats" ) # no parallel option .. just a few
-      temperature.map( p=p1, type="climatology" ) # no parallel option .. just a few
-      parallel.run( temperature.map, p=p1, type="seasonal" ) # all seasonal predicted means
-      parallel.run( temperature.map, p=p1, type="annual" ) # bottom.statistics.annual
+      temperature.map( p=p1, DS="lbm.stats" ) # no parallel option .. just a few
+      temperature.map( p=p1, DS="climatology" ) # no parallel option .. just a few
+      parallel.run( temperature.map, p=p1, DS="seasonal" ) # all seasonal predicted means
+      parallel.run( temperature.map, p=p1, DS="annual" ) # bottom.statistics.annual
     }
 
   }
@@ -28,12 +28,15 @@ temperature.map = function( ip=NULL, p=NULL, type="all" ) {
   # -----------------------
 
 
-  if ( type=="seasonal" ) {
+  if ( DS=="seasonal" ) {
 
     bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain, "bottom.predictions", "seasonal" )
     dir.create( bottomdir.maps, recursive=T, showWarnings=F )
+    loc = bathymetry.db(p=p, DS="baseline" )
+
     datarange = seq(-1, 12, length.out=100)
     cols = color.code( "blue.black", datarange )
+    
     for (iy in ip ) {
       y = p$runs[iy, "yrs"]
       H = temperature.db( p=p, DS="predictions", yr=y, ret="mean"  )
@@ -53,9 +56,11 @@ temperature.map = function( ip=NULL, p=NULL, type="all" ) {
 
   # ---------------------------
 
-  if ( type %in% c("annual" ) ) {
+  if ( DS %in% c("annual" ) ) {
     bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain , "bottom.predictions", "annual" )
     dir.create( bottomdir.maps, recursive=T, showWarnings=F )
+    loc = bathymetry.db(p=p, DS="baseline" )
+
     for ( vname in p$bstats ) {
       for (iy in ip ) {
         y = p$runs[iy, "yrs"]
@@ -108,7 +113,7 @@ temperature.map = function( ip=NULL, p=NULL, type="all" ) {
 
   # ------------------------------
 
-  if ( type %in% c("climatology" ) ) {
+  if ( DS %in% c("climatology" ) ) {
 
     bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain, "bottom.predictions", "climatology" )
     dir.create( bottomdir.maps, recursive=T, showWarnings=F )
@@ -165,10 +170,11 @@ temperature.map = function( ip=NULL, p=NULL, type="all" ) {
   # ------------------------------
 
 
-  if ( type %in% c("lbm.stats" ) ) {
+  if ( DS %in% c("lbm.stats" ) ) {
 
     bottomdir.maps = file.path( project.datadirectory("bio.temperature"), "maps", p$spatial.domain, "bottom.predictions", "lbm.stats" )
     dir.create( bottomdir.maps, recursive=T, showWarnings=F )
+    loc = bathymetry.db(p=p, DS="baseline" )
 
     H = temperature.db( p=p, DS="lbm.stats" )
 
