@@ -67,7 +67,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5 )  # 
 
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
-    if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
+    if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "twostep" # "twostep" might be interesting to follow up
+    # if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
 
     # using covariates as a first pass essentially makes it ~ kriging with external drift
     p$lbm_global_modelengine = NULL #"gam"
@@ -81,9 +82,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # XX hrs on thoth all cpus
       
       p$lbm_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s( log(z), k=3, bs="ts")
-          + s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=120, bs="ts") )  
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s( log(z), k=5, bs="ts")
+          + s(plon, k=10, bs="ts") + s(plat, k=10, bs="ts")
+          + s(plon, plat, cos.w, sin.w, yr, k=150, bs="ts") )  
       # more than 100 knots and it takes a very long time, 50 seems sufficient, given the large-scaled pattern outside of the prediction box
       # other possibilities:
         #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
@@ -108,8 +109,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # 42 hrs on tartarus all cpus 
       # 18 GB RAM for 24 CPU .. 
       p$lbm_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s(log(z), k=3, bs="ts")
-          + s(cos.w, sin.w, yr, bs="ts", k=36) )
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") + s( log(z), k=5, bs="ts")
+          + s(plon, k=5, bs="ts") + s(plat, k=5, bs="ts")
+          + s(plon, plat, cos.w, sin.w, yr, k=125, bs="ts") )  
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$lbm_local_model_distanceweighted = TRUE
 
