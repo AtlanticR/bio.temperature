@@ -20,19 +20,11 @@
     }
 
     if ( p$tsmethod %in% c("ar" ) ) {
-        interpolate.ts = temperature.timeseries.interpolate.spectral  ## to do..
+        cat("TODO \n")
+        # interpolate.ts = temperature.timeseries.interpolate.spectral  ## to do..
     }
 
-
-    B = hydro.db( p=p, DS="bottom.gridded.all"  )
-    B$tiyr = lubridate::decimal_date ( B$date )
-
-    # globally remove all unrealistic data
-    keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
-    if (length(keep) > 0 ) B = B[ keep, ]
-    TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
-    keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
-    if (length(keep) > 0 ) B = B[ keep, ]
+    B = hydro.db( p=p, DS="spacetime.input"  )
 
     P = bathymetry.db( p=p, DS="baseline" )
     tbot <- bigmemory::attach.big.matrix( p$descriptorfile.tbot  )

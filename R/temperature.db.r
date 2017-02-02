@@ -1,139 +1,23 @@
 
 temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 
-  if (DS %in% "bigmemory.filenames" ) {
-    p$tmp.datadir = file.path( p$project.root, "tmp" )
-    if( !file.exists(p$tmp.datadir)) dir.create( p$tmp.datadir, recursive=TRUE, showWarnings=FALSE )
-    p$backingfile.tbot = paste( "tbot.bigmatrix", p$spatial.domain, "tmp", sep=".")
-    p$backingfile.tbotse = paste( "tbotse.bigmatrix", p$spatial.domain, "tmp", sep=".")
-    return(p)
-  }
 
-  # ------
-
-  if (DS %in% "bigmemory.cleanup" ) {
-    # not used .. here for reference for other projects
-    # load bigmemory data objects pointers
-    p = temperature.db( p=p, DS="bigmemory.filenames" )
-    todelete = file.path( p$tmp.datadir,c( p$backingfile.tbot, p$backingfile.tbotse ))
-    for (fn in todelete ) if (file.exists(fn)) file.remove(fn)
-    return( todelete )
-  }
-
-  # ------
-
-  if (DS %in% "bigmemory.initiate" ) {
-    p = temperature.db( p=p, DS="bigmemory.filenames" )
-  # create file backed bigmemory objects
-    # fn.tbot = file.path(p$tmp.datadir, p$backingfile.tbot )
-    # if ( file.exists( fn.tbot) ) file.remove( fn.tbot)
-    # fn.tbotse = file.path(p$tmp.datadir, p$backingfile.tbotse )
-    # if ( file.exists( fn.tbotse) ) file.remove( fn.tbotse )
-    nr = p$nP
-    nc = p$nw*p$ny
-    # shared RAM object
-    tbot = big.matrix(nrow=nr, ncol=nc, type="double" , shared=TRUE)
-    tbot.se = big.matrix(nrow=nr, ncol=nc, type="double", shared=TRUE)
-    p$descriptorfile.tbot = bigmemory::describe( tbot)
-    p$descriptorfile.tbotse = bigmemory::describe( tbot.se)
-    return( p )
-  }
-
-  #  -------------
-
-  if ( DS %in% "bigmemory.status" ) {
-      # not used .. here for reference for other projects
-      tbot = bigmemory::attach.big.matrix(p$descriptorfile.tbot  )
-      # problematic and/or no data (e.g., land, etc.) and skipped
-      i = which( is.nan( tbot[, 1] ) )
-      # not yet completed
-      j = which( is.na( tbot[,1] ) )
-      # completed
-      k = which( is.finite (tbot[,1])  ) # not yet done
-      return( list(problematic=i, incomplete=j, completed=k, n.total=nrow(tbot[]),
-                   n.incomplete=length(j), n.problematic=length(i), n.complete=length(k)) )
-    }
-
-
-  # -----------------------
-
-  if ( DS %in% c( "temporal.interpolation", "temporal.interpolation.se", "temporal.interpolation.redo" ) ) {
-    # interpolations complete ... now write time slices to disk
-    tinterpdir = project.datadirectory("bio.temperature", "data", "interpolated", "temporal", p$spatial.domain  )
-    dir.create( tinterpdir, recursive=T, showWarnings=F )
-    if (DS %in% c("temporal.interpolation")) {
-        fn1 = file.path( tinterpdir, paste( "temporal.interpolation", yr, "rdata", sep=".") )
-        if (file.exists( fn1) ) load(fn1)
-        return ( tinterp )
-    }
-		if (DS %in% c("temporal.interpolation.se")) {
-        fn1 = file.path( tinterpdir, paste( "temporal.interpolation.se", yr, "rdata", sep=".") )
-        if (file.exists( fn1) ) load(fn1)
-        return ( tinterp.se )
-    }
-    tb <- bigmemory::attach.big.matrix( p$descriptorfile.tbot  )
-		tb.se <- bigmemory::attach.big.matrix( p$descriptorfile.tbotse  )
-
-    # copy
-    tbot = tb[]
-    tbot.se = tb.se[]
-    # reject unreasonable extremes
-    bad = which( tbot < -3 | tbot > 25  )
-    if (length( bad) > 0) {
-      tbot[ bad] = NA
-      tbot.se[bad] = NA
-    }
-
-    # global quantile removal: 99.9 % prob
-    tq = quantile( tbot, probs=c(0.0005, 0.9995), na.rm=TRUE  )   # in 2015: -2.46276 21.60798
-    bad = which( tbot < tq[1] | tbot > tq[2] )
-    if (length( bad) > 0) {
-      tbot[ bad] = NA
-      tbot.se[bad] = NA
-    }
-
-    tr = quantile( tbot.se, probs=c(0.0005, 0.9995), na.rm=TRUE  )   # 0.0802125 11.3508923
-    bad = which( tbot.se < tr[1] | tbot.se > tr[2] )
-    if (length( bad) > 0) {
-      tbot[ bad] = NA
-      tbot.se[bad] = NA
-    }
-
-    for ( r in 1:length(p$tyears) ) {
-			yt = p$tyears[r]
-			fn1 = file.path( tinterpdir, paste( "temporal.interpolation", yt, "rdata", sep=".") )
-			fn2 = file.path( tinterpdir, paste( "temporal.interpolation.se", yt, "rdata", sep=".") )
-      print( fn1 )
-			cstart = (r-1) * p$nw
-			col.ranges = cstart + (1:p$nw)
-			tinterp = tbot[,col.ranges]
-			tinterp.se = tbot.se[,col.ranges]
-			save( tinterp, file=fn1, compress=T)
-			save( tinterp.se, file=fn2, compress=T)
-		}
-		return ( "complete" )
-  }
-
-  # -----------------------
-
-  if (DS %in% c(  "spatial.interpolation", "spatial.interpolation.se", "spatial.interpolation.redo" )){
-
-    starttime = Sys.time()
+  if (DS %in% c(  "spacetime.prediction.mean", "spacetime.prediction.sd", "spacetime.prediction.redo", "spacetime.prediction" )){
 
 		# interpolated predictions over only missing data
-		spinterpdir =  file.path( project.datadirectory("bio.temperature"), "interpolated", "spatial", p$spatial.domain )
-    dir.create( spinterpdir, recursive=T, showWarnings=F )
+		savedir = file.path(p$project.root, "spacetime", p$spatial.domain )
+    # dir.create( savedir, recursive=T, showWarnings=F )  # created by spacetime
 
-		if (DS %in% c("spatial.interpolation")) {
+    if (DS %in% c("spacetime.prediction", "spacetime.prediction.mean")) {
       P = NULL
-      fn1 = file.path( spinterpdir, paste("spatial.interpolation",  yr, "rdata", sep=".") )
+      fn1 = file.path( savedir, paste("spacetime.prediction.mean",  yr, "rdata", sep=".") )
       if (file.exists( fn1) ) load(fn1)
       return ( P )
     }
 
-		if (DS %in% c("spatial.interpolation.se")) {
+    if (DS %in% c("spacetime.prediction.sd")) {
       V = NULL
-			fn2 = file.path( spinterpdir, paste("spatial.interpolation.se",  yr, "rdata", sep=".") )
+      fn2 = file.path( savedir, paste("spacetime.prediction.sd",  yr, "rdata", sep=".") )
       V =NULL
       if (file.exists( fn2) ) load(fn2)
       return ( V )
@@ -141,95 +25,36 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 
     if (exists( "libs", p)) RLibrary( p$libs )
     if ( is.null(ip) ) ip = 1:p$nruns
-    O = bathymetry.db( p=p, DS="baseline" )
-    O$z = NULL
-
-    # store a few things into p as required by spmethod ..
-    if (p$spmethod == "kernel.density" ) {
-      # pre-compute a few things rather than doing it for each iteration
-      p$wght = fields::setup.image.smooth(nrow=p$nplons, ncol=p$nplats, dx=p$pres, dy=p$pres,
-        theta=p$theta, xwidth=p$nsd*p$theta, ywidth=p$nsd*p$theta )
-      p$O2M = cbind( (O$plon-p$plons[1])/p$pres + 1, (O$plat-p$plats[1])/p$pres + 1) # row, col indices in matrix form
-    }
-
-    if (p$spmethod == "gam" ) {
-      p$O = O
-    }
-
-    rm(O); gc()
 
     for ( r in ip ) {
       y = p$runs[r, "yrs"]
-      P = temperature.db( p=p, DS="temporal.interpolation", yr=y  )
-      V = temperature.db( p=p, DS="temporal.interpolation.se", yr=y  )
-			print ( paste("Year:", y)  )
-      for ( ww in 1:p$nw ) {
-        # print ( paste( "Seasonal component (dyear) :", ww) )
-        # these are simple interpolations
-        P[,ww] = temperature.spatial.interpolate( method=p$spmethod, p=p, z=P[,ww] )
-        V[,ww] = temperature.spatial.interpolate( method=p$spmethod, p=p, z=V[,ww] )
-      }
-
-      # reject unreasonable extremes
-      bad = which( P < -3 | P > 25  )
-      if (length( bad) > 0) {
-        P[ bad] = NA
-        V[bad] = NA
-      }
-
-      # annual quantile removal: 99% prob
-      tq = quantile( P, probs=c(0.0005, 0.9995), na.rm=TRUE  )
-      bad = which( P < tq[1] | P > tq[2] )
-      if (length( bad) > 0) {
-        P[bad] = NA
-        V[bad] = NA
-      }
-
-      tr = quantile( V, probs=c(0.0005, 0.9995), na.rm=TRUE  )
-      bad = which( V < tr[1] | V > tr[2] )
-      if (length( bad) > 0) {
-        P[bad] = NA
-        V[bad] = NA
-      }
-
-      fn1 = file.path( spinterpdir,paste("spatial.interpolation",  y, "rdata", sep=".") )
-			print(fn1)
-      fn2 = file.path( spinterpdir,paste("spatial.interpolation.se",  y, "rdata", sep=".") )
-			save( P, file=fn1, compress=T )
-			save( V, file=fn2, compress=T )
-
-      # copy as P ,V will be removed
-      PP0 = P
-      VV0 = V
-
       # default domain
-      p0 = spatial.parameters( p=p, type=p$default.spatial.domain ) # from
+      PP0 = temperature.db( p, DS="spacetime.prediction.mean", yr=yr)
+      VV0 = temperature.db( p, DS="spacetime.prediction.sd", yr=yr)
+      p0 = spacetime_parameters( p=p, type=p$default.spatial.domain ) # from
       p$wght = fields::setup.image.smooth( nrow=p0$nplons, ncol=p0$nplats, dx=p0$pres, dy=p0$pres,
               theta=p$theta, xwidth=p$nsd*p$theta, ywidth=p$nsd*p$theta )
       L0 = bathymetry.db( p=p0, DS="baseline" )[, c("plon", "plat")]
-
-      sreg = setdiff( p$subregions, p$spatial.domain.default )
+      sreg = setdiff( p$subregions, p$spatial.domain.default ) 
       for ( gr in sreg ) {
-        p1 = spatial.parameters( p=p, type=gr ) # 'warping' from p -> p1
+        p1 = spacetime_parameters( p=p, type=gr ) # 'warping' from p -> p1
           L1 = bathymetry.db( p=p1, DS="baseline" )[, c("plon", "plat")]
           P = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
           V = matrix( NA, ncol=p$nw, nrow=nrow(L1) )
           for (iw in 1:p$nw) {
-            P[,iw] = spacetime.regrid ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
-            V[,iw] = spacetime.regrid ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
+            P[,iw] = spacetime_reproject ( Z0=PP0[,iw], L0, L1, p0=p, p1=p1 )
+            V[,iw] = spacetime_reproject ( Z0=VV0[,iw], L0, L1, p0=p, p1=p1 )
           }
-          spinterpdir_sg = file.path( project.datadirectory("bio.temperature"), "data", "interpolated", "spatial", p1$spatial.domain )
-          dir.create( spinterpdir_sg, recursive=T, showWarnings=F )
-
-          fn1_sg = file.path( spinterpdir_sg, paste("spatial.interpolation",  y, "rdata", sep=".") )
-          fn2_sg = file.path( spinterpdir_sg, paste("spatial.interpolation.se",  y, "rdata", sep=".") )
+          savedir_sg = file.path(p$project.root, "spacetime", p1$spatial.domain ) 
+          dir.create( savedir_sg, recursive=T, showWarnings=F )
+          fn1_sg = file.path( savedir_sg, paste("spacetime.prediction.mean",  y, "rdata", sep=".") )
+          fn2_sg = file.path( savedir_sg, paste("spacetime.prediction.sd",  y, "rdata", sep=".") )
           save( P, file=fn1_sg, compress=T )
           save( V, file=fn2_sg, compress=T )
           print (fn1_sg)
       }
-    }
-    endtime = Sys.time()
-    return (endtime - starttime)
+    } 
+    return ("Completed")
   }
 
 
@@ -255,13 +80,13 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
 			print ( paste("Year:", y)  )
 
 			O = bathymetry.db( p=p, DS="baseline" )
-      P = temperature.db( p=p, DS="spatial.interpolation", yr=y  )
+      P = temperature.db( p=p, DS="spacetime.prediction.mean", yr=y  )
    		P[ P < -2 ] = -2
 		  P[ P > 30 ] = 30
 		  ibaddata = which( !is.finite(P) )
 			P[ ibaddata ] = mean(P, na.rm=T )
 
-			V = temperature.db( p=p, DS="spatial.interpolation.se", yr=y  )
+			V = temperature.db( p=p, DS="spacetime.prediction.sd", yr=y  )
 			V[ V < 0.1 ] = 100  # shrink weighting of unreasonably small SEs
 		  V[ which( !is.finite(V)) ] = 1000 # "
 			V[ ibaddata ] = 10000 # " smaller still
@@ -372,7 +197,7 @@ temperature.db = function ( ip=NULL, year=NULL, p, DS, vname=NULL, yr=NULL ) {
     print ( "Completing and downscaling data where necessary ..." )
 
     # default domain climatology
-    p0 = spatial.parameters( type=p$spatial.domain.default )
+    p0 = spacetime_parameters( type=p$spatial.domain.default )
     Z0 = matrix( NA, nrow=p0$nplons, ncol=p0$nplats)
     PS0 = bathymetry.db ( p=p0, DS="baseline" )
     PS0$id =1:nrow(PS0)
