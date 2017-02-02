@@ -1,5 +1,5 @@
 
-hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC"), ...) {
+hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC"), ...) {
 
   # manipulate temperature databases from osd, groundfish and snow crab and grid them
   # OSD data source is
@@ -13,8 +13,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
   # no time records, just day/mon/year .. assume utc
 
   basedir = file.path( project.datadirectory("bio.temperature"), "data" )
-  loc.archive = file.path( basedir, "archive", "profiles", p$spatial.domain )
-  loc.basedata = file.path( basedir, "basedata", "rawdata", p$spatial.domain )
+  loc.archive = file.path( basedir, "archive", "profiles")
+  loc.basedata = file.path( basedir, "basedata", "rawdata" )
   dir.create( loc.basedata, recursive=T, showWarnings=F )
 
   # OSD data series variables of interest
@@ -127,7 +127,7 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     }
   }
 
-  ## 
+  ##
 
   if (DS=="USSurvey_NEFSC") {
     # data dump supplied by Adam Cook .. assumed to tbe bottom temperatures from their surveys in Gulf of Maine area?
@@ -140,11 +140,11 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     ne$sigmat = NA
     ne$date = ne$timestamp
     ne$yr = lubridate::year( ne$timestamp )
-    ne$dyear = lubridate::decimal_date( ne$timestamp ) - ne$yr 
+    ne$dyear = lubridate::decimal_date( ne$timestamp ) - ne$yr
     ne = planar2lonlat( ne, proj.type=p$internal.projection )  # convert lon lat to coord system of p0
     if (is.null(yr)) return(ne) # everything
     i = which( lubridate::year( ne$timestamp) %in% yr )
-    if (length(i) > 0) ne = ne[i,]    
+    if (length(i) > 0) ne = ne[i,]
     return (ne)
   }
 
@@ -178,9 +178,9 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     require (ROracle)
     connect = Oracle()
     con =dbConnect( connect, username=oracle.personal.user, password=oracle.personal.password, dbname="PTRAN" )
-    
+
     cruises   <- dbGetQuery(con, "select * from ODF_ARCHIVE.ODF_CRUISE_EVENT" )
- 
+
     for ( y in yr ) {
       fny = file.path( fn.root, paste( y, "rdata", sep="."))
       odfdat = sqlQuery( con,  paste(
@@ -200,17 +200,15 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
     odbcClose(connect)
     return (fn.root)
 
-  } 
+  }
 
   # ----------------
 
   if (DS %in% c( "profiles.annual.redo", "profiles.annual" ) ) {
     # read in annual depth profiles then extract bottom temperatures
 
-    if (p$spatial.domain %in% c("SSE", "snowcrab") ) p$spatial.domain="canada.east"  ## no point in having these as they are small subsets
-
     basedir = project.datadirectory("bio.temperature", "data" )
-    loc.profile = file.path( basedir, "basedata", "profiles", p$spatial.domain )
+    loc.profile = file.path( basedir, "basedata", "profiles" )
     dir.create( loc.profile, recursive=T, showWarnings=F )
 
     if (DS=="profiles.annual") {
@@ -353,14 +351,19 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
   # ----------------
 
-  if (DS %in% c( "bottom.annual", "bottom.annual.redo" ) ) {
+  if (DS %in% c( "bottom.annual", "bottom.annual.redo", "bottom.all" ) ) {
     # extract bottom temperatures
 
-    if (p$spatial.domain %in% c("SSE", "snowcrab")  ) p$spatial.domain="canada.east"  ## no point in having these as they are small subsets
-
     basedir = project.datadirectory("bio.temperature", "data" )
-    loc.bottom = file.path( basedir, "basedata", "bottom", p$spatial.domain )
+    loc.bottom = file.path( basedir, "basedata", "bottom"  )
     dir.create( loc.bottom, recursive=T, showWarnings=F )
+    
+    fbAll = file.path( loc.bottom, "bottom.all.rdata" ) 
+    if (DS=="bottom.all") {
+      O = NULL
+      if (file.exists(fbAll) ) load (fbAll)
+      return(O)
+    }
 
     if (DS=="bottom.annual") {
       fn = file.path( loc.bottom, paste("bottom", yr, "rdata", sep="."))
@@ -386,9 +389,12 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
 
     if (exists( "libs", p)) RLibrary( p$libs )
 
+    tne = hydro.db( p=p, DS="USSurvey_NEFSC" )
+
     dyears = (c(1:(p$nw+1))-1)  / p$nw # intervals of decimal years... fractional year breaks
 
     for (iy in ip) {
+
       yt = p$runs[iy, "yrs"]
       Y = bio.temperature::hydro.db( DS="profiles.annual", yr=yt, p=p )
       if (is.null(Y)) next()
@@ -399,192 +405,78 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, vname=NULL, additional.d
       Yid = cut( Y$dyear, breaks=dyears, include.lowest=T, ordered_result=TRUE )
       Y$id =  paste( round(Y$longitude,2), round(Y$latitude,2), Yid, sep="~" )
       ids =  sort( unique( Y$id ) )
-      res = copy.data.structure( Y)
+      Z = copy.data.structure( Y)
 
       for (i in ids ) {
-        Z = Y[ which( Y$id == i ), ]
-        jj = which( is.finite( Z$depth ) )
+        W = Y[ which( Y$id == i ), ]
+        jj = which( is.finite( W$depth ) )
         if ( length(jj) < 3 ) next()
-        zmax = max( Z$depth, na.rm=T ) - 10  # accept any depth within 10 m of the maximum depth
-        kk =  which( Z$depth >= zmax )
-        R = Z[ which.max( Z$depth ) , ]
-        R$temperature = median( Z$temperature[kk] , na.rm=T )
-        R$salinity = median( Z$salinity[kk] , na.rm=T )
-        R$sigmat = median( Z$sigmat[kk] , na.rm=T )
-        R$oxyml = median( Z$oxyml[kk] , na.rm=T )
-        res = rbind( res, R )
+        Wmax = max( W$depth, na.rm=T ) - 10  # accept any depth within 10 m of the maximum depth
+        kk =  which( W$depth >= Wmax )
+        R = W[ which.max( W$depth ) , ]
+        R$temperature = median( W$temperature[kk] , na.rm=T )
+        R$salinity = median( W$salinity[kk] , na.rm=T )
+        R$sigmat = median( W$sigmat[kk] , na.rm=T )
+        R$oxyml = median( W$oxyml[kk] , na.rm=T )
+        Z = rbind( Z, R )
       }
 
-      Z = res
+      Z = rename.df( Z, "longitude", "lon")
+      Z = rename.df( Z, "latitude", "lat")
+      Z = rename.df( Z, "temperature", "t")
+      Z = rename.df( Z, "depth", "z")
+
+      utne = which( tne$yr== yt)
+      if ( length(utne) > 0) Z = rbind( Z, tne[,names(Z)] )
+
+      Z$date = as.Date( Z$date ) # strip out time of day information
+      Z$ddate = lubridate::decimal_date( Z$date )
+      Z$dyear = Z$ddate - Z$yr
+      Z = lonlat2planar( Z, proj.type=p$internal.projection )
+
+      igood = which( Z$t >= -3 & Z$t <= 25 )  ## 25 is a bit high but in case some shallow data
+      Z = Z[igood, ]
+
+      igood = which( Z$lon >= p$corners$lon[1] & Z$lon <= p$corners$lon[2]
+          &  Z$lat >= p$corners$lat[1] & Z$lat <= p$corners$lat[2] )
+      Z = Z[igood, ]
+
+
+      Z = Z[ which( is.finite( Z$lon + Z$lat + Z$plon + Z$plat ) ) , ]
+      ## ensure that inside each grid/time point
+      ## that there is only one point estimate .. taking medians
+      vars = c("z", "t", "salinity", "sigmat", "oxyml")
+      Z$st = paste( Z$ddate, Z$plon, Z$plat )
+
+      o = which( ( duplicated( Z$st )) )
+      if (length(o)>0) {
+        dupids = unique( Z$st[o] )
+        for ( dd in dupids ) {
+          e = which( Z$st == dd )
+          keep = e[1]
+          drop = e[-1]
+          for (v in vars) Z[keep, v] = median( Z[e,v], na.rm=TRUE )
+          Z$st[drop] = NA  # flag for deletion
+        }
+        Z = Z[ -which( is.na( Z$st)) ,]
+      }
+      Z$st = NULL
       fn = file.path( loc.bottom, paste("bottom", yt, "rdata", sep="."))
 			print (fn)
       save( Z, file=fn, compress=T)
     }
+
+    O = NULL
+    for ( yr in p$tyears ) {
+      o = hydro.db( p=p, DS="bottom.annual", yr=yr )
+      if (!is.null(o)) O = rbind(O, o)
+    }
+    save(O, file=fbAll, compress=TRUE)
+
     return ("Completed")
 
   }
 
-
-  # -----------------
-
-  if (DS %in% c( "bottom.gridded", "bottom.gridded.redo" , "bottom.gridded.all" )){
-    # this is stored locally and not as an archive for speed and flexibility
-
-    basedir = project.datadirectory("bio.temperature", "data" )
-    loc.gridded = file.path( basedir, "basedata", "gridded", "bottom", p$spatial.domain )
-    dir.create( loc.gridded, recursive=T, showWarnings=F )
-
-    O = NULL
-    fnall = file.path( loc.gridded, paste( "bottom.allyears", "rdata", sep="." ) )
-
-    if (DS == "bottom.gridded.all" ) {
-      if (is.null(yr)) yr=p$tyears # defaults to tyears if no yr specified
-      if (file.exists(fnall)) {
-        load (fnall)
-      }
-      O = O[ which( O$yr %in% yr) , ]
-      return(O)
-    }
-
-    if (DS == "bottom.gridded.all.redo" ) {
-      if (is.null(yr)) yr=p$tyears # defaults to tyears if no yr specified
-      for (y in p$tyears ) {
-          On = hydro.db(p=p, DS="bottom.gridded", yr=y)
-          if ( is.null( On) ) next()
-          O = rbind( O, On )
-        }
-      save( O, file=fnall, compress=TRUE )
-      O = O[ which( O$yr %in% yr) , ]
-      return( fnall )
-    }
-
-
-    if (DS == "bottom.gridded" ) {
-			fng = file.path(  loc.gridded, paste( "bottom", yr, "rdata", sep="." ) )
-      tp = NULL
-			if (file.exists(fng) ) load(fng)
-      return ( tp )
-    }
-
-
-    if (DS == "bottom.gridded.redo" ) {
-
-      if ( is.null(ip)) {
-        if( exists( "nruns", p ) ) {
-          ip = 1:p$nruns
-        } else {
-          if ( !is.null(yr)) {
-            # if only selected years being re-run
-            ip = 1:length(yr)
-            p$runs = data.frame(yrs = yr)
-          } else {
-            ip = 1:length(p$tyears)
-            p$runs = data.frame(yrs = p$tyears)
-          }
-        }
-      }
-
-      if (exists( "libs", p)) RLibrary( p$libs )
-
-      for (iip in ip) {
-        y = p$runs[iip, "yrs"]
-        fn = file.path( loc.gridded , paste( "bottom", y, "rdata", sep="." ) )
-        print(fn)
-        tp = NULL
-        pcanada.east = p
-        pcanada.east$spatial.domain="canada.east"
-        # must "force" the following to read data from a larger spatial extent
-        # (as this is all that is currently stored) .. can used SSE specific
-        # but that increases storgage and data duplication .. no need
-
-        tp = bio.temperature::hydro.db( p=pcanada.east, DS="bottom.annual", yr=y )
-
-        if (is.null( tp) ) next()
-				tp = rename.df( tp, "longitude", "lon")
-        tp = rename.df( tp, "latitude", "lat")
-        tp = rename.df( tp, "temperature", "t")
-        tp = rename.df( tp, "depth", "z")
-
-        tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=y ) 
-  
-        tp = rbind( tp, tne[,names(tp)] )
-
-        tp$date = as.Date( tp$date ) # strip out time of day information
-        tp$ddate = lubridate::decimal_date( tp$date )
-        tp$dyear = tp$ddate - tp$yr
-				# tp$depth = NULL
-
-        igood = which( tp$t >= -3 & tp$t <= 25 )  ## 25 is a bit high but in case some shallow data
-        tp = tp[igood, ]
-
-        igood = which( tp$lon >= p$corners$lon[1] & tp$lon <= p$corners$lon[2]
-            &  tp$lat >= p$corners$lat[1] & tp$lat <= p$corners$lat[2] )
-        tp = tp[igood, ]
-
-        tp = lonlat2planar( tp, proj.type=p$internal.projection )
-
-				tp$lon = grid.internal( tp$lon, p$lons )
-        tp$lat = grid.internal( tp$lat, p$lats )
-
-				tp$plon = grid.internal( tp$plon, p$plons )
-        tp$plat = grid.internal( tp$plat, p$plats )
-
-				tp = tp[ which( is.finite( tp$lon + tp$lat + tp$plon + tp$plat ) ) , ]
-        ## ensure that inside each grid/time point
-        ## that there is only one point estimate .. taking medians
-        vars = c("z", "t", "salinity", "sigmat", "oxyml")
-        tp$st = paste( tp$ddate, tp$plon, tp$plat )
-
-        o = which( ( duplicated( tp$st )) )
-        if (length(o)>0) {
-          dupids = unique( tp$st[o] )
-          for ( dd in dupids ) {
-            e = which( tp$st == dd )
-            keep = e[1]
-            drop = e[-1]
-            for (v in vars) tp[keep, v] = median( tp[e,v], na.rm=TRUE )
-            tp$st[drop] = NA  # flag for deletion
-          }
-          tp = tp[ -which( is.na( tp$st)) ,]
-        }
-        tp$st = NULL
-
-				save( tp, file=fn, compress=T)
-      }
-    }
-    return ( "Completed rebuild"  )
-  }
-
-  # -----------------
-  
-  if (DS=="spacetime.input") {
-
-    B = hydro.db( p=p, DS="bottom.gridded.all"  )
-    B$tiyr = lubridate::decimal_date ( B$date )
-
-    # globally remove all unrealistic data
-    keep = which( B$t >= -3 & B$t <= 25 ) # hard limits
-    if (length(keep) > 0 ) B = B[ keep, ]
-    TR = quantile(B$t, probs=c(0.0005, 0.9995), na.rm=TRUE ) # this was -1.7, 21.8 in 2015
-    keep = which( B$t >=  TR[1] & B$t <=  TR[2] )
-    if (length(keep) > 0 ) B = B[ keep, ]
-    B$z = log( B$z)  # ranges  are too large in some cases to use untransformed
-
-    # default output grid
-    tout = expand.grid( yr=p$tyears, dyear=1:p$nw )
-    tout$tiyr = tout$yr + (tout$dyear-0.5) / p$nw # mid-points
-    tout = tout[ order(tout$tiyr), ]
-
-    Pcov = bathymetry.db( p=p, DS="complete" )
-    Pcov = Pcov[ which(Pcov$z >0), ]
-    Pcov$z = log( Pcov$z) # ranges  are too large in some cases to use untransformed 2 orders or more (e.g. 40 to 2000 m)
-    OUT  = list( 
-        LOCS=Pcov[,c("plon","plat")],
-        COV =Pcov[,c("z")],
-        TIME=tout$tiyr )          
-
-    return (list(input=B, output=OUT))
-  }
 
 }
 

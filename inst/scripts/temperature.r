@@ -3,12 +3,15 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  p = bio.temperature::temperature.parameters( current.year=2016 )
+  current.year=2016
+
+  p = bio.temperature::temperature.parameters( current.year=current.year )
 
   # ------------------------------
 
   if ( create.baseline.database ) {
-
+    # 0 data assimilation
+    
     if (historical.data.redo) {
       hydro.db( DS="osd.rawdata.allfiles.redo", p=p )   # redo whole data set (historical) from 1910 to 2010
       hydro.db( DS="osd.initial", p=p ) # 2008:2015
@@ -35,70 +38,58 @@
   # Basic data uptake now complete  .. move to interpolations
   # ------------------------------
 
-  if (create.interpolated.results.spacetime ) {
-
-    # 1. grid bottom data to a reasonable internal spatial resolution ; <1 min
-    p = make.list( list( yrs=p$tyears), Y=p )
-    # parallel.run( hydro.db, p=p, DS="bottom.gridded.redo" )
-    hydro.db( p=p, DS="bottom.gridded.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
-    hydro.db( p=p, DS="bottom.gridded.all.redo" )  # all p$tyears, for a single year use with yr argument: yr=p$newyear
-
-    # 2. spacetime interpolations assuming some seasonal pattern
+  if (create.interpolated.results.lbm ) {
+    
+    # 1. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
-    # p$clusters = c( rep("kaos",16), rep("nyx",16), rep("tartarus",16), rep("hyperion", 4), rep("io", 6) ) # with no clusters defined, use local cpu's only
-    p = spacetime( DATA='hydro.db( p=p, DS="spacetime.input" )', p=p, storage.backend="bigmemory.ram" )
+    # p$lbm_local_modelengine = "twostep"
+    p$lbm_local_modelengine = "gam"
 
-    # 3. simple spatial interpolation .. collect data from spacetime and break into sub-areas defined by p$subregions = c("canada.east", "SSE", "SSE.mpa", "snowcrab" ) .. "regridding"
-    # ... it is required for the habitat lookup .. no way around it
-    # (complex/kriging takes too much time/cpu) ==> 3-4 hr/run
-    # using localhost in 2014 6+ hr for each run but with multiple cycles ~ 10 hr total
-    # use all clusters if available
-    p$clusters = rep("localhost", detectCores() )
+    p = bio.temperature::temperature.parameters( DS="lbm", p=p )
+   
+    DATA='temperature.db( p=p, DS="lbm.inputs" )' 
+    p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
+    p = lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs 
+    p = lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs
+    p = lbm( p=p, tasks=c( "stage3" ) )
+    p = lbm( p=p, tasks=c( "save" ) )
+
+    # to view progress in terminal:
+    # watch -n 120 cat /home/jae/bio.data/bio.temperature/modelled/t/canada.east/lbm_current_status
+
+
+    # 2.  collect predictions from lbm and warp/break into sub-areas defined by 
+    #     p$spatial.domain.subareas = c( "SSE", "SSE.mpa", "snowcrab" ) 
     p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="spacetime.prediction.redo" )
-    #  temperature.db( p=p, DS="spacetime.prediction.redo" ) # 2hr in serial mode
+    parallel.run( temperature.db, p=p, DS="predictions.redo" ) # 10 min
+    temperature.db( p=p, DS="lbm.stats.redo" ) # warp to sub grids
+
+    # 3. extract relevant statistics 
+    # or parallel runs: ~ 1 to 2 GB / process .. ~ 4+ hr
+    parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" ) 
+
+    # 4. all time slices in array format
+    temperature.db( p=p,  DS="spatial.annual.seasonal.redo" )
+
+    # 5. time slice at prediction time of year
+    temperature.db( p=p,  DS="timeslice.redo" )
+
+    # 6. complete statistics and warp/regrid database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
+    temperature.db( p=p, DS="complete.redo")
 
 
-    # 4. extract relevant statistics:: only for default grid . TODO might as well do for each subregion/subgrid
-    # temperature.db(  p=p, DS="bottom.statistics.annual.redo" )
-    # or parallel runs: ~ 1 to 2 GB / process
-    # 4 cpu's ~ 10 min
-    p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
-    p = make.list( list( yrs=p$tyears), Y=p )
-    parallel.run( temperature.db, p=p, DS="bottom.statistics.annual.redo" )
-    #  temperature.db( p=p, DS="bottom.statistics.annual.redo" )
-
-
-    # 5. climatology database ... ~ 2 min :: only for  default grid . TODO might as well do for each subregion/subgrid
-    p$bstats = c("tmean", "tamplitude", "wmin", "thalfperiod", "tsd" )
-    p$tyears.climatology = p$tyears  # or redefine it with : p$tyears.climatology = 1950:2015
-    temperature.db ( p=p, DS="climatology.redo")
-
-  }
-
-
-  ### to this point everything is run on p$spatial.domain.default domain (except spatial.interpolation), now take subsets:
-  # 7. downscale stats etc to appropriate domain: simple interpolations and maps 
- 
-     # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
+  # 7. maps 
+    current.year=2016
+    p = bio.temperature::temperature.parameters( current.year=current.year )
+    p = bio.temperature::temperature.parameters( DS="lbm", p=p )
+    # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )
     p = make.list( list( yrs=p$tyears), Y=p )
+ 
+    temperature.map( p=p )
 
-    for ( gr in p$subregions ) {
-      print (gr)
-      p = spacetime_parameters(  p=p, type= gr )
-      if ( length(p$clusters) > 1 ) {
-        parallel.run( temperature.db, p=p, DS="complete.redo")
-        parallel.run( hydro.map, p=p, type="annual"  )
-        parallel.run( hydro.map, p=p, type="global")
-      } else {
-        temperature.db( p=p, DS="complete.redo")
-        hydro.map( p=p, type="annual" )
-        hydro.map( p=p, type="global" )
-      }
-    }
 
   # finished 
 

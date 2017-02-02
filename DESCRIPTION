@@ -14,6 +14,7 @@ Imports:
   bigmemory,
   lubridate,
   fields,
+  lbm,
   bio.base, 
   bio.bathymetry, 
   bio.polygons,
