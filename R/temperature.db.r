@@ -18,7 +18,7 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
     if (length(keep) > 0 ) B = B[ keep, ]
     keep = which( B$z >=  1 ) # ignore very shallow areas ..
     if (length(keep) > 0 ) B = B[ keep, ]
-
+  
     varstokeep = unique( c( p$variables$Y, p$variables$LOCS, p$variables$TIME, p$variables$COV ) )
     B = B[,varstokeep]
     
