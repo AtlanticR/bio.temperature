@@ -45,14 +45,14 @@
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
     # p$lbm_local_modelengine = "twostep"
-    p$lbm_local_modelengine = "gam"
+    # p$lbm_local_modelengine = "gam"
 
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
     p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
-    p = lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs 
-    p = lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs
+    p = lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs for gam
+    p = lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs for gam
     p = lbm( p=p, tasks=c( "stage3" ) )
     p = lbm( p=p, tasks=c( "save" ) )
 
