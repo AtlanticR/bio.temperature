@@ -132,7 +132,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
  
       # bayesx families are specified as characters, this forces it to pass as is and 
       # then the next does the transformation internal to the "lbm__bayesx"
-      p$lbm_local_family_bayesx = "gaussian" 
+      p$lbm_local_family = "gaussian" 
 
       # alternative models .. testing .. problem is that SE of fit is not accessible?
       p$lbm_local_modelformula = formula(
