@@ -72,7 +72,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     # using covariates as a first pass essentially makes it ~ kriging with external drift
     p$lbm_global_modelengine = NULL #"gam"
-    p$lbm_global_modelformula = NULL # formula( t ~ s(z, bs="ts") ) # marginally useful .. consider removing it.
+    p$lbm_global_modelformula = NULL 
+    # p$lbm_global_modelformula = formula( t ~ s(z, bs="ts" + s(s.range, bs="ts") + s(dZ, bs="ts") + s(ddZ, bs="ts") + s(log.substrate.grainsize, bs="ts")  ) ) # marginally useful .. consider removing it.
+    
     p$lbm_global_family = gaussian()
   
     p$lbm_local_family = gaussian()
