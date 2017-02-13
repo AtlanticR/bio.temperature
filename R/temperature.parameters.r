@@ -72,7 +72,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     # using covariates as a first pass essentially makes it ~ kriging with external drift
     p$lbm_global_modelengine = NULL #"gam"
-    p$lbm_global_modelformula = NULL # formula( t ~ s(z, bs="ts") ) # marginally useful .. consider removing it.
+    p$lbm_global_modelformula = NULL 
+    # p$lbm_global_modelformula = formula( t ~ s(z, bs="ts" + s(s.range, bs="ts") + s(dZ, bs="ts") + s(ddZ, bs="ts") + s(log.substrate.grainsize, bs="ts")  ) ) # marginally useful .. consider removing it.
+    
     p$lbm_global_family = gaussian()
   
     p$lbm_local_family = gaussian()
@@ -132,7 +134,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
  
       # bayesx families are specified as characters, this forces it to pass as is and 
       # then the next does the transformation internal to the "lbm__bayesx"
-      p$lbm_local_family_bayesx = "gaussian" 
+      p$lbm_local_family = "gaussian" 
 
       # alternative models .. testing .. problem is that SE of fit is not accessible?
       p$lbm_local_modelformula = formula(
