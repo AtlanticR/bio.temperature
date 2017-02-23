@@ -171,7 +171,8 @@ temperature.db = function ( ip=NULL, p, DS, varnames=NULL, yr=NULL, ret="NULL", 
   			O[,iy,3] = c(apply( P, 1, quantile, probs=p$lbm_quantile_bounds[1], na.rm=TRUE ))
         O[,iy,4] = c(apply( P, 1, quantile, probs=p$lbm_quantile_bounds[2], na.rm=TRUE ))
   			P = NULL
-        O[,iy,5] = O[,iy,4] - O[,iy,3] 
+        O[,iy,5] = O[,iy,4] - O[,iy,3]
+        O[,iy,6] = c(apply( P, 1, cumsum )) / p0$ny # normalized degree days (X 365 for degre days)
       }
 
       # save sp-time matrix for each stat .. easier to load into lbm this way   

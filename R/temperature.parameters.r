@@ -19,7 +19,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
-    p$bstats = c("tmean", "tsd", "tmin", "tmax", "amplitude" )
+    p$bstats = c("tmean", "tsd", "tmin", "tmax", "amplitude", "degreedays" )
   
     if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
     
