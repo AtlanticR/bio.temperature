@@ -90,6 +90,17 @@
  
     temperature.map( p=p )
 
+    # just redo a couple maps for ResDoc
+    p$spatial.domain = "SSE"
+    #p$bstats = "tmean"
+    p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
+    p$corners = data.frame(plon=c(150, 1022), plat=c(4600, 5320) )
+    temperature.map( p=p, DS='climatology' )
+    
+    temperature.map( p=p, DS='annual' )
+    
+    temperature.map( p=p, DS='climatology' )
+
 
   # finished 
 
