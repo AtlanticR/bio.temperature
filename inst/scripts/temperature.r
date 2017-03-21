@@ -50,11 +50,11 @@
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
-    p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
-    p = lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs for gam
-    p = lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs for gam
-    p = lbm( p=p, tasks=c( "stage3" ) )
-    p = lbm( p=p, tasks=c( "save" ) )
+    lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
+    lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs for gam
+    lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs for gam
+    lbm( p=p, tasks=c( "stage3" ) )
+    lbm( p=p, tasks=c( "save" ) )
 
     # to view progress in terminal:
     # watch -n 120 cat /home/jae/bio.data/bio.temperature/modelled/t/canada.east/lbm_current_status
