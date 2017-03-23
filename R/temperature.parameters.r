@@ -56,8 +56,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
     
     p$lbm_rsquared_threshold = 0.25 # lower threshold
-    p$lbm_distance_prediction = 3 # this is a half window km
-    p$lbm_distance_statsgrid = 4 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+    p$lbm_distance_prediction = 4 # this is a half window km
+    p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
     p$lbm_distance_scale = 25 # km ... approx guess of 95% AC range 
     p$lbm_distance_min = p$lbm_distance_statsgrid 
     p$lbm_distance_max = 60
