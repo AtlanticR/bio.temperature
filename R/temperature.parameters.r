@@ -87,7 +87,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       p$lbm_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") 
           + s(plon, k=10, bs="ts") + s(plat, k=10, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=150, bs="ts") )  
+          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
       # more than 100 knots and it takes a very long time, 50 seems sufficient, given the large-scaled pattern outside of the prediction box
       # other possibilities:
         #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
@@ -113,8 +113,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # 18 GB RAM for 24 CPU .. 
       p$lbm_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") 
-          + s(plon, k=5, bs="ts") + s(plat, k=5, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=125, bs="ts") )  
+          + s(plon, k=3, bs="ts") + s(plat, k=3, bs="ts")
+          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$lbm_local_model_distanceweighted = TRUE
 
