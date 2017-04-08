@@ -106,7 +106,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     # } else if (p$lbm_local_modelengine == "gaussianprocess2Dt") {
     #   message( "NOTE:: The gaussianprocess2Dt method is really slow .. " )
     # } 
-
     } else if (p$lbm_local_modelengine =="twostep") {
       # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM .. about 1/3 faster than 24 cpus systems
       # 42 hrs on tartarus all cpus 
@@ -131,6 +130,21 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     #     # similar to GAM model but no spatial component , space and time are handled via FFT but time is seeded by the averge local TS signal (to avoid missing data isses in time.)
     #   p$lbm_local_model_distanceweighted = TRUE
  
+    } else if (p$lbm_local_modelengine =="spate") {
+      # used to structure timeseries as spate's fft in time seems to cause too many issues ?
+      
+      # override as predictions are expensive
+      p$lbm_distance_prediction = 8 # this is a half window km
+      p$lbm_distance_statsgrid = 10 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+
+      p$lbm_spate_boost_timeseries = TRUE  
+      p$lbm_local_modelformula = formula(
+        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts") 
+          + s(plon, k=3, bs="ts") + s(plat, k=3, bs="ts")
+          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )  
+        # similar to GAM model but no spatial component .. space is handled via FFT
+      p$lbm_local_model_distanceweighted = TRUE
+ 
     } else if (p$lbm_local_modelengine == "bayesx") {
  
       # bayesx families are specified as characters, this forces it to pass as is and 
@@ -153,9 +167,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     }
 
     # for fft-based methods that require lowpass:
-    
-        p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
-        p$lbm_lowpass_nu = 0.5
+
+    p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
+    p$lbm_lowpass_nu = 0.5
         
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
     
