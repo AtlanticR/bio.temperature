@@ -68,7 +68,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.25)  # mostly used to down sample when there is too much data (depth, substrate)
 
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
-    if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "twostep" # "twostep" might be interesting to follow up
+    if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "spate" # "twostep" might be interesting to follow up
     # if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
 
     # using covariates as a first pass essentially makes it ~ kriging with external drift
@@ -119,7 +119,6 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
       # p$lbm_twostep_space = "spatial.process"
       p$lbm_twostep_space = "krige"
-
 
     # } else if (p$lbm_local_modelengine =="spate") {
     # still needs some work 

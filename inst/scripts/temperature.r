@@ -44,11 +44,12 @@
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
-    # p$lbm_local_modelengine = "twostep"
+    # p$lbm_local_modelengine = "twostep" -- with krige would take months ... ignore for now
     # p$lbm_local_modelengine = "gam"
 
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
+
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
     lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
     lbm( p=p, tasks=c( "stage0" ) ) #  24 hrs for gam
