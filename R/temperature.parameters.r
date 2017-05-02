@@ -133,8 +133,8 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       # used to structure timeseries as spate's fft in time seems to cause too many issues ?
       
       # override as predictions are expensive
-      p$lbm_distance_prediction = 8 # this is a half window km
-      p$lbm_distance_statsgrid = 10 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+      p$lbm_distance_prediction = 4# this is a half window km
+      p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
 
       p$lbm_spate_boost_timeseries = TRUE  
       p$lbm_local_modelformula = formula(

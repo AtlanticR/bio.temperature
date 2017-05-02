@@ -47,6 +47,9 @@
     # p$lbm_local_modelengine = "twostep" -- with krige would take months ... ignore for now
     # p$lbm_local_modelengine = "gam"
 
+    p$clusters = rep("localhost", 3 ) 
+    p$clusters = rep( c("localhost", "kaos", "kaos", "nyx", "nyx", "tartarus", "tartarus") ) 
+    
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
 
