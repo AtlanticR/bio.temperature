@@ -48,8 +48,9 @@
     # p$lbm_local_modelengine = "gam"
 
     p$clusters = rep("localhost", 3 ) 
-    p$clusters = rep( c("localhost", "kaos", "kaos", "nyx", "nyx", "tartarus", "tartarus") ) 
     
+    p$lbm_spate_method=="em" 
+
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
 
