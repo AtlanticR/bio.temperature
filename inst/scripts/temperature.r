@@ -49,7 +49,7 @@
 
     p$clusters = rep("localhost", 3 ) 
     
-    p$lbm_spate_method=="em" 
+    p$lbm_spate_method="mcmc_fast" 
 
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
