@@ -44,17 +44,23 @@ create.interpolated.results.lbm=TRUE
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
-    # p$lbm_local_modelengine = "twostep"
+    # p$lbm_local_modelengine = "twostep" -- with krige would take months ... ignore for now
     # p$lbm_local_modelengine = "gam"
+
+    p$clusters = rep("localhost", 3 ) 
+    
+    p$lbm_spate_method=="em" 
 
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
+
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
-    p = lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
-    p = lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs for gam
-    p = lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs for gam
-    p = lbm( p=p, tasks=c( "stage3" ) )
-    p = lbm( p=p, tasks=c( "save" ) )
+    lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
+    lbm( p=p, tasks=c( "stage0" ) ) #  24 hrs for gam
+    lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs for gam
+    lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs for gam
+    lbm( p=p, tasks=c( "stage3" ) )
+    lbm( p=p, tasks=c( "save" ) )
 
     # to view progress in terminal:
     # watch -n 120 cat /home/jae/bio.data/bio.temperature/modelled/t/canada.east/lbm_current_status
@@ -89,6 +95,17 @@ create.interpolated.results.lbm=TRUE
  
     temperature.map( p=p )
 
+
+    # just redo a couple maps for ResDoc
+    p$spatial.domain = "SSE"
+    #p$bstats = "tmean"
+    p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
+    p$corners = data.frame(plon=c(150, 1022), plat=c(4600, 5320) )
+    temperature.map( p=p, DS='climatology' )
+    
+    temperature.map( p=p, DS='annual' )
+    
+    temperature.map( p=p, DS='climatology' )
 }
 
   # finished 
