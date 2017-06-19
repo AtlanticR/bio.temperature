@@ -62,12 +62,12 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
     p$lbm_distance_scale = 25 # km ... approx guess of 95% AC range
     p$lbm_distance_min = p$lbm_distance_statsgrid
-    p$lbm_distance_max = 60
+    p$lbm_distance_max = 65
 
-    p$n.min = 250 # n.min/n.max changes with resolution must be more than the number of knots/edf
+    p$n.min = 500 # n.min/n.max changes with resolution must be more than the number of knots/edf
     # min number of data points req before attempting to model timeseries in a localized space
-    p$n.max = 4000 # numerical time/memory constraint -- anything larger takes too much time
-    p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.25, 1.33)  # mostly used to down sample when there is too much data (depth, substrate)
+    p$n.max = 5000 # numerical time/memory constraint -- anything larger takes too much time
+    p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.25 )  # mostly used to down sample when there is too much data (depth, substrate)
 
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
     if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "spate" # "twostep" might be interesting to follow up
@@ -137,7 +137,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       p$lbm_spate_boost_timeseries = TRUE  # use simple GAM spectral contraint to structure timeseries as spate's fft in time seems to cause overfitting ?
       p$lbm_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts")
-          + s(plon, k=3, bs="ts") + s(plat, k=3, bs="ts")
+          + s(plon, k=5, bs="ts") + s(plat, k=5, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
         # similar to GAM model but no spatial component .. space is handled via FFT
       p$lbm_local_model_distanceweighted = TRUE
