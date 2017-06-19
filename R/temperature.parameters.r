@@ -20,6 +20,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$newyear = current.year
     p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
+
     p$bstats = c("tmean", "tsd", "tmin", "tmax", "amplitude", "degreedays" )
 
     if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
@@ -56,6 +57,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
 
     p$lbm_rsquared_threshold = 0.25 # lower threshold
+
     p$lbm_distance_prediction = 4 # this is a half window km
     p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
     p$lbm_distance_scale = 25 # km ... approx guess of 95% AC range
@@ -162,6 +164,7 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     }
 
     # for fft-based methods that require lowpass:
+
 
     p$lbm_lowpass_phi = p$pres / 5 # FFT-baed methods cov range parameter .. not required for "spatial.process" ..
     p$lbm_lowpass_nu = 0.5

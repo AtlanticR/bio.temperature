@@ -3,12 +3,12 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  current.year=2016
+  if (!exists("current.year")) current.year=2016
 
   p = bio.temperature::temperature.parameters( current.year=current.year )
 
   # ------------------------------
-
+create.baseline.database=FALSE
   if ( create.baseline.database ) {
     # 0 data assimilation
     
@@ -18,7 +18,7 @@
       hydro.db( DS="ODF_ARCHIVE", p=p, yr=1969:2015 ) # specify range or specific year
     }
     # Roger Petipas has been maintaining a database, the following loads this data
-    hydro.db( DS="osd.current", p=p, yr=2014:p$newyear ) # specify range or specific year
+    #hydro.db( DS="osd.current", p=p, yr=2014:p$newyear ) # specify range or specific year
     hydro.db( DS="ODF_ARCHIVE", p=p, yr=p$newyear ) # specify range or specific year
 
     # Merge depth profiles from all data streams: OSD, groundfish, snowcrab, USSurvey_NEFSC
@@ -37,7 +37,7 @@
   # ------------------------------
   # Basic data uptake now complete  .. move to interpolations
   # ------------------------------
-
+create.interpolated.results.lbm=TRUE
   if (create.interpolated.results.lbm ) {
     
     # 1. lbm interpolations assuming some seasonal pattern
@@ -87,7 +87,6 @@
 
 
   # 7. maps 
-    current.year=2016
     p = bio.temperature::temperature.parameters( current.year=current.year )
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
@@ -95,6 +94,7 @@
     p = make.list( list( yrs=p$tyears), Y=p )
  
     temperature.map( p=p )
+
 
     # just redo a couple maps for ResDoc
     p$spatial.domain = "SSE"
@@ -106,7 +106,7 @@
     temperature.map( p=p, DS='annual' )
     
     temperature.map( p=p, DS='climatology' )
-
+}
 
   # finished 
 
