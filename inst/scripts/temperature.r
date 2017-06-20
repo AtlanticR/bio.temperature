@@ -4,11 +4,10 @@
   # this one has to be done manually .. no longer mainted by anyone ..
 
   if (!exists("current.year")) current.year=2016
-
   p = bio.temperature::temperature.parameters( current.year=current.year )
 
   # ------------------------------
-create.baseline.database=FALSE
+  create.baseline.database=FALSE
   if ( create.baseline.database ) {
     # 0 data assimilation
     
@@ -17,40 +16,45 @@ create.baseline.database=FALSE
       hydro.db( DS="osd.initial", p=p ) # 2008:2015
       hydro.db( DS="ODF_ARCHIVE", p=p, yr=1969:2015 ) # specify range or specific year
     }
+
     # Roger Petipas has been maintaining a database, the following loads this data
     #hydro.db( DS="osd.current", p=p, yr=2014:p$newyear ) # specify range or specific year
     hydro.db( DS="ODF_ARCHIVE", p=p, yr=p$newyear ) # specify range or specific year
 
     # Merge depth profiles from all data streams: OSD, groundfish, snowcrab, USSurvey_NEFSC
     p = make.list( list( yrs=c(2008:p$newyear)), Y=p )   # specify range or specific year
-    p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce ep = make.list( list( yrs=c(2008:p$newyear), Y=p ))   # specify range or specific year
+    p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency
+
     hydro.db( DS="profiles.annual.redo", p=p  )  # specify range or specific year
-    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="profiles.annual.redo" )
+    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="profiles.annual.redo" )  # if you want the parallel run
 
     # Extract bottom data from each profile
     p = make.list( list( yrs=2008:p$newyear), Y=p )  # specify range or specific year
     hydro.db( DS="bottom.annual.redo", yr=2008:p$newyear, p=p ) # yr argument overrides p$tyears .. e.g. for a new year of data
-    # hydro.db( DS="bottom.annual.redo", p=p )
-    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="bottom.annual.redo" )
+    
+    # hydro.db( DS="bottom.annual.redo", p=p ) # i.e., to redo all years
+    # parallel.run( hydro.db, p=p, yr=p$tyears, DS="bottom.annual.redo" )  # all years, as above but in paralell
   }
+
+
 
   # ------------------------------
   # Basic data uptake now complete  .. move to interpolations
   # ------------------------------
-create.interpolated.results.lbm=TRUE
+
+
+  create.interpolated.results.lbm=TRUE
   if (create.interpolated.results.lbm ) {
     
     # 1. lbm interpolations assuming some seasonal pattern
     # 1950-2013, SSE took ~ 35 hrs on laptop (shared RAM, 24 CPU; 1950-2013 run April 2014 ) ... 17 GB req of shared memory
     # 1950-2015, SSE 22 hrs, 42 GB RAM, 8 CPU on hyperion (10 Jan 2015), using NLM .. not much longer for "canada.east"
 
-    # p$lbm_local_modelengine = "twostep" -- with krige would take months ... ignore for now
-    # p$lbm_local_modelengine = "gam"
+    # p$lbm_local_modelengine = "twostep" -- with krige would take months due to the large number of time slices ... ignore for now
+    p$lbm_local_modelengine = "gam"  # this is the default method .. pure GAM .. fast and stable
+    # p$lbm_spate_method="mcmc_fast" # intersting but too slow
 
     p$clusters = rep("localhost", 2 ) 
-    
-    p$lbm_spate_method="mcmc_fast" 
-
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
 
@@ -62,7 +66,7 @@ create.interpolated.results.lbm=TRUE
     lbm( p=p, tasks=c( "stage3" ) )
     lbm( p=p, tasks=c( "save" ) )
 
-    # to view progress in terminal:
+    # to view progress in terminal (e.g.) .. change to your own directory :
     # watch -n 120 cat /home/jae/bio.data/bio.temperature/modelled/t/canada.east/lbm_current_status
 
 
@@ -96,7 +100,7 @@ create.interpolated.results.lbm=TRUE
     temperature.map( p=p )
 
 
-    # just redo a couple maps for ResDoc
+    # just redo a couple maps for ResDoc in the  SSE domain
     p$spatial.domain = "SSE"
     #p$bstats = "tmean"
     p = spatial_parameters( p=p, type=p$spatial.domain )  # default grid and resolution
