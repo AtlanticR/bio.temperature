@@ -52,12 +52,14 @@
 
     # p$lbm_local_modelengine = "twostep" -- with krige would take months due to the large number of time slices ... ignore for now
     p$lbm_local_modelengine = "gam"  # this is the default method .. pure GAM .. fast and stable
-    # p$lbm_spate_method="mcmc_fast" # intersting but too slow
+  #   if (0) {
+  #     p$lbm_local_modelengine = "spate"
+  #     p$lbm_spate_method="mcmc_fast" # intersting but too slow
+  # }
 
     p$clusters = rep("localhost", 2 ) 
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
    
-
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
     lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
     lbm( p=p, tasks=c( "stage0" ) ) #  24 hrs for gam

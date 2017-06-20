@@ -48,55 +48,61 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
   if (DS=="lbm") {
 
     p$libs = RLibrary( c( p$libs, "lbm" ) ) # required for parallel processing
-    p$storage.backend="bigmemory.ram"
+    if (!exists("storage.backend", p))  p$storage.backend="bigmemory.ram"
     if (!exists("clusters", p)) p$clusters = rep("localhost", detectCores() )
 
-    p$boundary = FALSE
-    p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
-    p$lbm_eps = 0.1  # distance units for eps noise to permit mesh gen for boundaries
-    p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
+    if (!exists("boundary", p)) p$boundary = FALSE
+    if (!exists("depth.filter", p)) p$depth.filter = 0 # depth (m) stats locations with elevation > 0 m as being on land (and so ignore)
+    if (!exists("lbm_eps", p)) p$lbm_eps = 0.1  # distance units for eps noise to permit mesh gen for boundaries
+    if (!exists("lbm_quantile_bounds", p)) p$lbm_quantile_bounds = c(0.01, 0.99) # remove these extremes in interpolations
 
-    p$lbm_rsquared_threshold = 0.25 # lower threshold
+    if (!exists("lbm_rsquared_threshold", p)) p$lbm_rsquared_threshold = 0.25 # lower threshold
 
-    p$lbm_distance_prediction = 4 # this is a half window km
-    p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-    p$lbm_distance_scale = 25 # km ... approx guess of 95% AC range
-    p$lbm_distance_min = p$lbm_distance_statsgrid
-    p$lbm_distance_max = 65
+    if (!exists("lbm_distance_prediction", p)) p$lbm_distance_prediction = 4 # this is a half window km
+    if (!exists("lbm_distance_statsgrid", p)) p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+    if (!exists("lbm_distance_scale", p)) p$lbm_distance_scale = 25 # km ... approx guess of 95% AC range
+    if (!exists("lbm_distance_min", p)) p$lbm_distance_min = p$lbm_distance_statsgrid
+    if (!exists("lbm_distance_max", p)) p$lbm_distance_max = 65
 
-    p$n.min = 500 # n.min/n.max changes with resolution must be more than the number of knots/edf
+    if (!exists("n.min", p)) p$n.min = 500 # n.min/n.max changes with resolution must be more than the number of knots/edf
     # min number of data points req before attempting to model timeseries in a localized space
-    p$n.max = 5000 # numerical time/memory constraint -- anything larger takes too much time
-    p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.25 )  # mostly used to down sample when there is too much data (depth, substrate)
+    if (!exists("n.max", p)) p$n.max = 5000 # numerical time/memory constraint -- anything larger takes too much time
+    if (!exists("sampling", p)) p$sampling = c( 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.25 )  # mostly used to down sample when there is too much data (depth, substrate)
 
+    # fast variogram options
     if (!exists("lbm_variogram_method", p)) p$lbm_variogram_method = "fast"
-    if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "spate" # "twostep" might be interesting to follow up
-    # if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
 
+    # global model options
     # using covariates as a first pass essentially makes it ~ kriging with external drift
-    p$lbm_global_modelengine = NULL #"gam"
+    p$lbm_global_modelengine = NULL # no covars .. alternatives .. "gam"
     p$lbm_global_modelformula = NULL
     # p$lbm_global_modelformula = formula( t ~ s(z, bs="ts" + s(s.range, bs="ts") + s(dZ, bs="ts") + s(ddZ, bs="ts") + s(log.substrate.grainsize, bs="ts")  ) ) # marginally useful .. consider removing it.
+    if (!exists("lbm_global_family", p))  p$lbm_global_family = gaussian()
 
-    p$lbm_global_family = gaussian()
 
-    p$lbm_local_family = gaussian()
 
+
+    # local model options    
+    # if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "spate" # "twostep" might be interesting to follow up
+    if (!exists("lbm_local_modelengine", p)) p$lbm_local_modelengine = "gam" # "twostep" might be interesting to follow up
+    if (!exists("lbm_local_modelformula", p)) p$lbm_local_modelformula = formula(
+      t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts")
+        + s(plon, k=10, bs="ts") + s(plat, k=10, bs="ts")
+        + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
+    # more than 100 knots and it takes a very long time, 50 seems sufficient, given the large-scaled pattern outside of the prediction box
+    # other possibilities:
+      #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
+      #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
+      #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
+    if (!exists("lbm_local_family", p)) p$lbm_local_family = gaussian()
+    if (!exists("lbm_local_model_distanceweighted", p)) p$lbm_local_model_distanceweighted = TRUE
+
+
+    # local engine-specific options
     if (p$lbm_local_modelengine =="gam") {
       # 32 hours on nyx all cpus;
       # XX hrs on thoth all cpus
-
-      p$lbm_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts")
-          + s(plon, k=10, bs="ts") + s(plat, k=10, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
-      # more than 100 knots and it takes a very long time, 50 seems sufficient, given the large-scaled pattern outside of the prediction box
-      # other possibilities:
-        #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
-        #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
-        #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
-        p$lbm_local_model_distanceweighted = TRUE
-        # p$lbm_gam_optimizer="perf"
+       # p$lbm_gam_optimizer="perf"
         p$lbm_gam_optimizer=c("outer", "bfgs")
 
     # } else if (p$lbm_local_modelengine =="fft") {
@@ -111,37 +117,21 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
     } else if (p$lbm_local_modelengine =="twostep") {
       # 34 hr with 8 CPU RAM on thoth, using 48 GB RAM .. about 1/3 faster than 24 cpus systems
       # 42 hrs on tartarus all cpus
-      # 18 GB RAM for 24 CPU ..
+      # 18 GB RAM for 24 CPU .. 
       p$lbm_local_modelformula = formula(
         t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts")
           + s(plon, k=3, bs="ts") + s(plat, k=3, bs="ts")
           + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
         # similar to GAM model but no spatial component .. space is handled via FFT
-      p$lbm_local_model_distanceweighted = TRUE
-
+  
       # p$lbm_twostep_space = "spatial.process"
       p$lbm_twostep_space = "krige"
-
-    # } else if (p$lbm_local_modelengine =="spate") {
-    # still needs some work
-    #   # similar to the two-step but use "spate" (spde, bayesian, mcmc) instead of "fields" (GMRF, ML)
-    #   p$lbm_local_modelformula = formula(
-    #     t ~ s(yr, k=5, bs="ts") + s(cos.w, bs="ts") + s(sin.w, bs="ts") + s( log(z), k=3, bs="ts")
-    #       + s(cos.w, sin.w, yr, bs="ts") )
-    #     # similar to GAM model but no spatial component , space and time are handled via FFT but time is seeded by the averge local TS signal (to avoid missing data isses in time.)
-    #   p$lbm_local_model_distanceweighted = TRUE
 
     } else if (p$lbm_local_modelengine =="spate") {
       p$lbm_distance_prediction = 4# this is a half window km
       p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
       p$lbm_spate_boost_timeseries = TRUE  # use simple GAM spectral contraint to structure timeseries as spate's fft in time seems to cause overfitting ?
-      p$lbm_local_modelformula = formula(
-        t ~ s(yr, k=5, bs="ts") + s(cos.w, k=3, bs="ts") + s(sin.w, k=3, bs="ts")
-          + s(plon, k=5, bs="ts") + s(plat, k=5, bs="ts")
-          + s(plon, plat, cos.w, sin.w, yr, k=100, bs="ts") )
-        # similar to GAM model but no spatial component .. space is handled via FFT
-      p$lbm_local_model_distanceweighted = TRUE
-
+  
     } else if (p$lbm_local_modelengine == "bayesx") {
 
       # bayesx families are specified as characters, this forces it to pass as is and
