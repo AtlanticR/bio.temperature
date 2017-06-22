@@ -3,7 +3,7 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  if (!exists("current.year")) current.year=2016
+  if (!exists("current.year")) current.year=lubridate::year(Sys.Date())
   p = bio.temperature::temperature.parameters( current.year=current.year )
 
   # ------------------------------

@@ -174,16 +174,12 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
       return (out)
     }
 
-    # require(RODBC)
-    require (ROracle)
-    connect = Oracle()
-    con =dbConnect( connect, username=oracle.personal.user, password=oracle.personal.password, dbname="PTRAN" )
-
-    cruises   <- dbGetQuery(con, "select * from ODF_ARCHIVE.ODF_CRUISE_EVENT" )
+    con = ROracle::dbConnect( DBI::dbDriver("Oracle"), username=oracle.personal.user, password=oracle.personal.password, dbname="PTRAN" )
+    cruises   <- ROracle::dbGetQuery(con, "select * from ODF_ARCHIVE.ODF_CRUISE_EVENT" )
 
     for ( y in yr ) {
       fny = file.path( fn.root, paste( y, "rdata", sep="."))
-      odfdat = sqlQuery( con,  paste(
+      odfdat = ROracle::dbGetQuery( con,  paste(
       " select * " ,
       " from ODF_ARCHIVE.ODF_CRUISE_EVENT i, ODF_ARCHIVE.ODF_DATA j " ,
       " where i.CRUISE_EVENT_ID(+)=j.DATA_VAL_ID ",
@@ -197,7 +193,8 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
       print(y)
     }
 
-    odbcClose(connect)
+    ROracle::dbDisconnect(connect)
+    
     return (fn.root)
 
   }
