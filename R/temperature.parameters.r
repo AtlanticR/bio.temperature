@@ -128,10 +128,14 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
       p$lbm_twostep_space = "krige"
 
     } else if (p$lbm_local_modelengine =="spate") {
-      p$lbm_distance_prediction = 4# this is a half window km
+      p$lbm_spate_method = "mcmc_fast"  # "mcmc" is too slow for temperature
+      p$lbm_distance_prediction = 4 # this is a half window km
       p$lbm_distance_statsgrid = 5 # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
       p$lbm_spate_boost_timeseries = TRUE  # use simple GAM spectral contraint to structure timeseries as spate's fft in time seems to cause overfitting ?
-  
+      p$lbm_spate_nburnin = 1000
+      p$lbm_spate_nposteriors = 1000
+      p$lbm_spate_nCovUpdates = 20 # no of times to update cov matrix during simulations
+
     } else if (p$lbm_local_modelengine == "bayesx") {
 
       # bayesx families are specified as characters, this forces it to pass as is and
