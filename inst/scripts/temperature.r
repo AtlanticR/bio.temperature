@@ -3,8 +3,8 @@
   # Prep OSD, snow crab and groundfish temperature profiles
   # this one has to be done manually .. no longer mainted by anyone ..
 
-  if (!exists("current.year")) current.year=lubridate::year(Sys.Date())
-  p = bio.temperature::temperature.parameters( current.year=current.year )
+  if (!exists("year.assessment")) year.assessment=lubridate::year(Sys.Date())
+  p = bio.temperature::temperature.parameters( year.assessment=year.assessment )
 
   # ------------------------------
   create.baseline.database=FALSE
@@ -95,7 +95,7 @@
 
 
   # 7. maps 
-    p = bio.temperature::temperature.parameters( current.year=current.year )
+    p = bio.temperature::temperature.parameters( year.assessment=year.assessment )
     p = bio.temperature::temperature.parameters( DS="lbm", p=p )
     # p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency using th
     # p$clusters = c( rep("kaos",23), rep("nyx",24), rep("tartarus",24) )

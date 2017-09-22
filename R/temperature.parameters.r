@@ -1,6 +1,6 @@
 
 
-temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
+temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) {
 
   if ( DS=="default") {
     if ( is.null( p ) ) p=list()
@@ -16,9 +16,9 @@ temperature.parameters = function( p=NULL, current.year=NULL, DS="default" ) {
 
     if ( !exists("spatial.domain.subareas", p) )  p$spatial.domain.subareas = c( "SSE.mpa", "SSE", "snowcrab" ) # target domains and resolution for additional data subsets .. add here your are of interest
 
-    if ( is.null( current.year )) current.year=lubridate::year(lubridate::now())
-    p$newyear = current.year
-    p$tyears = c(1950:current.year)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
+    if ( is.null( year.assessment )) year.assessment=lubridate::year(lubridate::now())
+    p$newyear = year.assessment
+    p$tyears = c(1950:year.assessment)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
 
     p$bstats = c("tmean", "tsd", "tmin", "tmax", "amplitude", "degreedays" )
