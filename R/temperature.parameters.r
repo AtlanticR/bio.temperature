@@ -41,6 +41,8 @@ temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) 
     tout = tout[ order(tout$tiyr), ]
     p$prediction.ts = tout$tiyr   # predictions at these time values (decimal-year)
 
+    message( str(p) )
+
     return(p)
   }
 
@@ -78,8 +80,6 @@ temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) 
     p$lbm_global_modelformula = NULL
     # p$lbm_global_modelformula = formula( t ~ s(z, bs="ts" + s(s.range, bs="ts") + s(dZ, bs="ts") + s(ddZ, bs="ts") + s(log.substrate.grainsize, bs="ts")  ) ) # marginally useful .. consider removing it.
     if (!exists("lbm_global_family", p))  p$lbm_global_family = gaussian()
-
-
 
 
     # local model options    
@@ -164,6 +164,8 @@ temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) 
     p$variables = list( Y="t", LOCS=c("plon", "plat"), TIME="tiyr", COV="z" )
 
     p$varnames = c( p$variables$LOCS, p$variables$COV ) # to extract for prediction
+
+    message( str(p) )
 
     return(p)
   }
