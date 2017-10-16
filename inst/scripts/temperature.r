@@ -55,7 +55,7 @@
   
    if (0) {
        p$lbm_local_modelengine = "spate"  # way too slow
-       p$lbm_spate_method="mcmc_fast" # intersting but too slow
+       p$lbm_spate_method="mcmc_fast" # interesting but too slow
        
    }
 

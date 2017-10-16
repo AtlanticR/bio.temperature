@@ -21,7 +21,7 @@ temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) 
     p$tyears = c(1950:year.assessment)  # 1945 gets sketchy -- mostly interpolated data ... earlier is even more sparse.
     p$tyears.climatology = p$tyears
 
-    p$bstats = c("tmean", "tsd", "tmin", "tmax", "amplitude", "degreedays" )
+    p$bstats = c("tmean", "tsd", "tmin", "tmax", "namplitude", "degreedays" )
 
     if ( !exists("yrs", p) )  p$yrs = p$tyears  # yr labels for output
 
@@ -94,7 +94,6 @@ temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) 
       #     seasonal.basic = ' s(yr) + s(dyear, bs="cc") ',
       #     seasonal.smoothed = ' s(yr, dyear) + s(yr) + s(dyear, bs="cc")  ',
       #     seasonal.smoothed.depth.lonlat = ' s(yr, dyear) + s(yr, k=3) + s(dyear, bs="cc") +s(z) +s(plon) +s(plat) + s(plon, plat, by=yr), s(plon, plat, k=10, by=dyear ) ',
-    if (!exists("lbm_local_family", p)) p$lbm_local_family = gaussian()
     if (!exists("lbm_local_model_distanceweighted", p)) p$lbm_local_model_distanceweighted = TRUE
 
 
@@ -140,7 +139,6 @@ temperature.parameters = function( p=NULL, year.assessment=NULL, DS="default" ) 
 
       # bayesx families are specified as characters, this forces it to pass as is and
       # then the next does the transformation internal to the "lbm__bayesx"
-      p$lbm_local_family = "gaussian"
 
       # alternative models .. testing .. problem is that SE of fit is not accessible?
       p$lbm_local_modelformula = formula(
