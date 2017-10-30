@@ -64,7 +64,7 @@
    
     DATA='temperature.db( p=p, DS="lbm.inputs" )' 
     lbm( p=p, tasks=c("initiate"), DATA=DATA ) # no global model, 5 min
-    lbm( p=p, tasks=c( "stage0" ) ) #  24 hrs for gam
+    lbm( p=p, tasks=c( "serial_debug" ) ) #  24 hrs for gam
     lbm( p=p, tasks=c( "stage1" ) ) #  24 hrs for gam
     lbm( p=p, tasks=c( "stage2" ) ) #   3.5 hrs for gam
     lbm( p=p, tasks=c( "stage3" ) )
