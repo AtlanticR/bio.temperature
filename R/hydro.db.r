@@ -1,5 +1,5 @@
 
-hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC"), ...) {
+hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groundfish", "snowcrab", "USSurvey_NEFSC", "lobster"), ...) {
 
   # manipulate temperature databases from osd, groundfish and snow crab and grid them
   # OSD data source is
@@ -127,13 +127,24 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     }
   }
 
-  ##
+  # ----------------------
 
   if (DS=="USSurvey_NEFSC") {
     # data dump supplied by Adam Cook .. assumed to tbe bottom temperatures from their surveys in Gulf of Maine area?
+    fn = file.path( project.datadirectory("bio.temperature"), "archive", "NEFSCTemps_formatted.rdata" )
+    if (!is.null(yr)) {
+      if (file.exists(fn)) {
+        load(fn)
+        i = which( lubridate::year( ne$timestamp) %in% yr )
+        out = NULL
+        if (length(i) > 0) out = ne[i,]
+        return(out)
+      }
+    }
+    # else assume a re-assimilation of data
     ne = NULL
-    fn = file.path( project.datadirectory("bio.temperature"), "archive", "NEFSCTemps.rdata" )
-    if (file.exists(fn)) load(fn)
+    fn_input = file.path( project.datadirectory("bio.temperature"), "archive", "NEFSCTemps.rdata" )
+    if (file.exists(fn_input)) load(fn_input)
     ne$id = paste(ne$plon, ne$plat, lubridate::date( ne$timestamp), sep="~" )
     ne$salinity = NA
     ne$oxyml = NA
@@ -142,14 +153,50 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
     ne$yr = lubridate::year( ne$timestamp )
     ne$dyear = lubridate::decimal_date( ne$timestamp ) - ne$yr
     ne = planar2lonlat( ne, proj.type=p$internal.projection )  # convert lon lat to coord system of p0
-    if (is.null(yr)) return(ne) # everything
-    i = which( lubridate::year( ne$timestamp) %in% yr )
-    if (length(i) > 0) ne = ne[i,]
-    return (ne)
+    save( ne, file=fn, compress=TRUE )
+
+    return (fn)
+  }
+
+  # ----------------------
+
+  if (DS=="lobster") {
+    # data dump supplied by Brad Hubley (2017) of nearshore lobster trap temperatures (sourced originally from FSRS) and converted into daily means
+    fn = file.path( project.datadirectory("bio.temperature"), "archive", "FSRStempdata_formatted.rdata" )
+    if (!is.null(yr)) {
+      if (file.exists(fn)) {
+        load(fn)
+        i = which( lubridate::year( lob$timestamp) %in% yr )
+        out = NULL
+        if (length(i) > 0) out = lob[i,]
+        return(out)
+      }
+    }
+    lob = NULL
+    fn = file.path( project.datadirectory("bio.temperature"), "archive", "FSRStempdata.rdata" )
+    if (file.exists(fn)) load(fn)
+    lob = fsrsT
+    names(lob) = tolower( names(lob))
+    lon = trunc( lob$longitude / 100) 
+    lob$longitude = lob$lon_dd
+    lob$latitude = lob$lat_dd
+    lob$timestamp = lob$haul_date
+    lob$id = paste(lob$plon, lob$plat, lubridate::date( lob$timestamp), sep="~" )
+    lob$salinity = NA
+    lob$oxyml = NA
+    lob$sigmat = NA
+    lob$date = lob$timestamp
+    lob$yr = lubridate::year( lob$timestamp )
+    lob$dyear = lubridate::decimal_date( lob$timestamp ) - lob$yr
+    lob = planar2lonlat( lob, proj.type=p$internal.projection )  # convert lon lat to coord system of p0
+    save( log, file=fn, compress=TRUE )
+    return (fn)
   }
 
 
-  # ----------------
+
+
+  # ----------------‘x == (x %% y) + y * ( x %/% y )
 
   if ( DS %in% c("ODF_ARCHIVE", "ODF_ARCHIVE.redo") ) {
     # PTRAN/CHOIJ
@@ -386,7 +433,6 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
     if (exists( "libs", p)) RLibrary( p$libs )
 
-    tne = hydro.db( p=p, DS="USSurvey_NEFSC" )
 
     dyears = (c(1:(p$nw+1))-1)  / p$nw # intervals of decimal years... fractional year breaks
 
@@ -423,8 +469,11 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
       Z = rename.df( Z, "temperature", "t")
       Z = rename.df( Z, "depth", "z")
 
-      utne = which( tne$yr== yt)
-      if ( length(utne) > 0) Z = rbind( Z, tne[,names(Z)] )
+      tne = hydro.db( p=p, DS="USSurvey_NEFSC", yr=yt )
+      if ( !is.null(tne) ) Z = rbind( Z, tne[,names(Z)] )
+      
+      lob = hydro.db( p=p, DS="lobster", yr=yt )
+      if ( !is.null(lob) ) Z = rbind( Z, lob[,names(Z)] )
 
       Z$date = as.Date( Z$date ) # strip out time of day information
       Z$ddate = lubridate::decimal_date( Z$date )

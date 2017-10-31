@@ -21,6 +21,10 @@
     #hydro.db( DS="osd.current", p=p, yr=2014:p$newyear ) # specify range or specific year
     hydro.db( DS="ODF_ARCHIVE", p=p, yr=p$newyear ) # specify range or specific year
 
+    hydro.db( p=p, DS="USSurvey_NEFSC" ) # US data .. new additions have to be made at the rawdata level manually
+
+    hydro.db( p=p, DS="lobster" ) # FSRS data ...  new additions have to be made at the rawdata level manually
+
     # Merge depth profiles from all data streams: OSD, groundfish, snowcrab, USSurvey_NEFSC
     p = make.list( list( yrs=c(2008:p$newyear)), Y=p )   # specify range or specific year
     p$clusters = rep("localhost", detectCores() )  # run only on local cores ... file swapping seem to reduce efficiency
