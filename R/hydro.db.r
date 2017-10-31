@@ -160,7 +160,20 @@ hydro.db = function( ip=NULL, p=NULL, DS=NULL, yr=NULL, additional.data=c("groun
 
   # ----------------------
 
-  if (DS=="lobster") {
+  if (DS %in% c("lobster","lobster.redo")) {
+    if (DS == "lobster.redo"){
+       require(RODBC)
+        con = odbcConnect(oracle.server , uid=oracle.lobster.username, pwd=oracle.lobster.password, believeNRows=F) # believeNRows=F required for oracle db's
+        fsrs = sqlQuery(con, "select * from fsrs_lobster.FSRS_LOBSTER_VW")
+        odbcClose(con)
+        fsrs$SYEAR = fsrs$HAUL_YEAR # add season-year identifier
+        fsrs$HAUL_DATE = as.Date(fsrs$HAUL_DATE)
+        fsrs$SYEAR[fsrs$LFA%in%c("33","34")] = as.numeric(substr(fsrs$S_LABEL[fsrs$LFA%in%c("33","34")],6,9)) # add season-year identifier
+        fsrsT =  subset(fsrs,TEMP>-90) #remove no temp data
+        fsrsT$Dloc = paste(fsrsT$HAUL_DATE,fsrsT$LATITUDE,fsrsT$LONGITUDE)
+        fsrsT = subset(fsrsT,!duplicated(Dloc)) #remove duplicate date-locations
+        save( fsrsT, file=file.path( project.datadirectory("bio.temperature"), "archive", "FSRStempdata_formatted.rdata" ), compress=T)
+    }
     # data dump supplied by Brad Hubley (2017) of nearshore lobster trap temperatures (sourced originally from FSRS) and converted into daily means
     fn = file.path( project.datadirectory("bio.temperature"), "archive", "FSRStempdata_formatted.rdata" )
     if (!is.null(yr)) {
